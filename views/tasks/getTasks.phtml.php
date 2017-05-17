@@ -1,0 +1,497 @@
+<link rel="stylesheet" type="text/css" href="/FormBuilder/public/css/timeline.css">
+
+<STYLE>
+    .cd-horizontal-timeline .events a.selected2::after {
+        background-color: #ff8000;
+        border-color: #ff8000;
+    }
+
+    .cd-horizontal-timeline .events a.older-event2::after {
+        border: 4px solid #ff8000;
+        bottom: -7px;
+        height: 17px;
+        width: 17px;
+    }
+
+    .modal-body {
+        float: left;
+        width: 100%;
+        background-color: #FFF !important;
+    }
+</STYLE>
+
+
+<div id="rejectedMessageWrapper">
+    <?php
+    //        if ($issueCounter == 0 && $rejected) {
+    //
+    //            $issueCounter++;
+    //            $this->partial("steps/rejectionOverride");
+    //
+    //        }
+    ?>
+</div>
+
+<?php
+$issueCounter = 0;
+$step = 1;
+$blComplete = false;
+?>
+
+<div class="panel-heading">
+    <div class="panel-options">
+
+        <?php $display = count ($arrAllWorkflows) > 1 ? 'block' : 'none'; ?>
+
+        <ul class="nav nav-tabs" style="display: <?= $display ?>">
+            <?php
+            $intCount = 0;
+            foreach ($arrAllWorkflows as $workflowId => $workflowName):
+                ?>
+                <li class="<?= ($intCount == 0 ? 'active' : '') ?>">
+                    <a workflowid="<?= $workflowId ?>" href="#tab-<?= $workflowId ?>" data-toggle="tab"><?= $workflowName ?></a></li>
+                <?php
+                $intCount++;
+            endforeach;
+            ?>
+        </ul>
+
+        <?php
+        if ( $showButton === true ):
+            echo '<button type="button" class="btn btn-sm btn-primary pull-right addNewOne">+</button>';
+        endif;
+        ?>
+    </div>
+</div>
+
+<div class="stepsWrapper">
+
+    <?php
+    $issueCounter = 0;
+
+    $arrRequests = array();
+
+    if ( isset ($arrWorkflows) && !empty ($arrWorkflows) )
+    {
+        foreach ($arrWorkflows as $sampleId => $arrWorkflow) {
+
+            foreach ($arrWorkflow as $workflowId => $arrStepData) {
+                $arrRequests[$workflowId][] = $arrStepData;
+            }
+        }
+    }
+    ?>
+
+    <div class="alert alert-danger col-lg-12 pull-left" id="file2Warning" style="display: none;">
+        You need to select a file.
+    </div>
+
+    <?php
+    $intCount = 0;
+    foreach ($arrAllWorkflows as $workflowId => $workflowName):
+
+
+        $display = $intCount == 0 ? 'block' : 'none';
+
+        echo '<div sectionid="' . $workflowId . '" class="section-content col-lg-12 pull-left" style="border-bottom: 1px dashed #1ab394; display:' . $display . ';">';
+
+        if ( isset ($arrRequests[$workflowId]) ):
+            foreach ($arrRequests[$workflowId] as $arrWorkflow):
+
+                echo '<div id="completeMessageWrapper">';
+                if ( $issueCounter == 0 && $complete )
+                {
+                    $issueCounter++;
+                    $this->partial ("steps/completeMessage");
+                }
+
+                echo '</div>';
+            endforeach;
+        endif;
+
+        if ( !empty ($arrRequests[$workflowId]) )
+        {
+            echo '<br><center><h2>Please Select an element</h2></center><br>';
+        }
+
+        echo '</div>';
+
+        $intCount++;
+    endforeach
+    ?>
+
+    <div class="panel-body">
+
+        <div class="tab-content">
+
+            <?php
+            $intCount2 = 0;
+            foreach ($arrAllWorkflows as $workflowId => $workflowName):
+
+                echo ' <div class="tab-pane ' . ($intCount2 == 0 ? 'active' : '') . '" id="tab-' . $workflowId . '">';
+
+                echo '<div class="pull-left col-lg-12" style="height: 250px; overflow-y: auto;">';
+
+                if ( empty ($arrRequests[$workflowId]) )
+                {
+                    echo "<br><center><h3>No " . $workflowName . " have been created.</h3></center>";
+                    $issueCounter++;
+                }
+
+                if ( isset ($arrRequests[$workflowId]) ):
+                    foreach ($arrRequests[$workflowId] as $arrWorkflow):
+
+                        $autoAssign = false;
+                        ?>
+                        <section class="cd-horizontal-timeline">
+
+
+                            <div class="col-lg-12 pull-left" style="height:25px;">
+
+                                <div class="col-lg-3 pull-left"></div>
+
+                                <div class="col-lg-1 pull-left">
+                                    <span class="label label-success"><?= $arrWorkflow['data']['current_status'] ?></span>
+                                </div>
+
+                                <div class="col-lg-4 pull-left">
+                                    <center><h3><?= isset ($arrWorkflow['data']['element_id']) ? $arrWorkflow['data']['element_id'] : '' ?></h3></center>
+                                </div>
+
+                                <?php
+                                if ( $arrWorkflow['data']['current_status'] == "COMPLETE" )
+                                {
+
+                                    $checked = isset ($arrWorkflow['data']['goldenSample']) && $arrWorkflow['data']['goldenSample'] == "Y" ? 'checked="checked"' : '';
+
+                                    echo '<div class="col-lg-3 pull-right">
+                                        <div class="checkbox m-r-xs">
+                                            <input sectionid="' . $workflowId . '" workflowid="' . $arrWorkflow['data']['id'] . '" ' . $checked . ' type="checkbox" id="checkbox1" class="i-checks">
+                                            <label for="checkbox1">
+                                                Golden Sample
+                                            </label>
+                                        </div>
+                                    </div>';
+                                }
+                                ?>
+
+
+                            </div>
+
+                            <div class="timeline pull-left">
+                                <div class="events-wrapper">
+                                    <div class="events" sectionid="<?= $workflowId ?>" workflowid="<?= $arrWorkflow['data']['id'] ?>">
+                                        <ol>
+                                            <?php
+                                            $intCount = 0;
+                                            $date = '';
+                                            $class = '';
+                                            $completed = '';
+
+                                            foreach ($arrSteps[$workflowId] as $arrStep) {
+
+                                                $conditions = json_decode ($arrStep['conditions'], true);
+
+                                                if ( $intCount == 0 && empty ($arrWorkflow['data']['currentStep']) )
+                                                {
+                                                    $class = 'selected';
+                                                }
+                                                else
+                                                {
+                                                    $class = '';
+                                                }
+
+                                                if ( $arrStep['step_id'] == $arrWorkflow['data']['currentStep'] )
+                                                {
+                                                    $class = 'selected';
+                                                }
+                                                
+                                                if ( isset ($conditions['autoAssign']) && $conditions['autoAssign'] == "Yes" && $hasPermission === true )
+                                                {
+                                                    if ( $arrStep['step_id'] == $arrWorkflow['data']['nextStatus'] )
+                                                    {
+                                                        $class = " autoAssign";
+                                                    }
+                                                    else
+                                                    {
+                                                        if ( $arrStep['step_id'] != $arrWorkflow['data']['currentStep'] )
+                                                        {
+                                                            $class = 'disabledClass autoAssign';
+                                                        }
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    if ( $arrStep['step_id'] != $arrWorkflow['data']['currentStep'] )
+                                                    {
+                                                        $class = 'disabledClass';
+                                                    }
+                                                }
+
+                                                if ( $arrStep['step_id'] < $arrWorkflow['data']['currentStep'] )
+                                                {
+                                                    $class = ' older-event';
+                                                }
+
+                                                if ( $arrStep['first_step'] == 1 )
+                                                {
+                                                    $class .= " firstStep";
+                                                }
+
+                                                /*
+                                                  if($arrStep['step_id'] != 21 && $arrStep['completed_previous'] == 0) {
+                                                  $class = 'disabledClass';
+                                                  } */
+
+                                                if ( isset ($jobStatusAudit[$arrWorkflow['data']['id']][$arrStep["step_id"]]) )
+                                                {
+                                                    $audit = $arrStep["step_name"] . " " . substr ($jobStatusAudit[$arrWorkflow['data']['id']][$arrStep["step_id"]]["datetime"], 0, 10) . " " .
+                                                            substr ($jobStatusAudit[$arrWorkflow['data']['id']][$arrStep["step_id"]]["datetime"], 11, 10) . " by " . $jobStatusAudit[$arrWorkflow['data']['id']][$arrStep["step_id"]]["user_name"];
+
+                                                    $date = date ("d/m/Y", strtotime ($jobStatusAudit[$arrWorkflow['data']['id']][$arrStep["step_id"]]["datetime"]));
+                                                }
+                                                else
+                                                {
+                                                    $audit = $arrStep["step_name"] . " - No data stored";
+                                                }
+
+                                                echo '<li><a title="' . $audit . '" href="#0" step-id="' . $arrStep['step_id'] . '" data-date="' . $date . '" class="' . $class . ' ' . $completed . '">' . $arrStep['step_name'] . '</a></li>';
+
+                                                $intCount++;
+                                            }
+                                            ?>
+                                        </ol>
+                                        <span class="filling-line" aria-hidden="true"></span>
+                                    </div>
+                                </div>
+
+
+                                <ul class="cd-timeline-navigation">
+                                    <li><a href="#0" class="prev inactive">Prev</a></li>
+                                    <li><a href="#0" nextid="<?= $arrWorkflow['data']['id'] ?>" class="next">Next</a></li>
+                                </ul>
+
+                            </div>
+                        </section>
+
+
+                        <?php
+                    endforeach;
+                endif;
+
+                echo '</div>';
+                echo '</div>';
+
+                $intCount2++;
+            endforeach;
+            ?>
+        </div>
+    </div>
+</div>
+
+<div class="AddNewWrapper col-lg-12" style="display: none;">
+
+</div>
+
+<script type="text/javascript" src="/FormBuilder/public/js/getTasks.js"></script>
+
+<script>
+
+    //var $_SERVER = '<?= $_SERVER["HTTP_HOST"] ?>';
+
+//    setTimeout(function () {
+//        $(".events").eq(0).children().children().children("a.selected").click();
+//    }, 1000);
+
+    $ ("#complete").hide ();
+    $ ("#save").hide ();
+
+    var startStep = <?= $step ?>;
+    var issueCounter = <?= $issueCounter ?>;
+
+<?php if ( $issueCounter > 0 ): ?>
+
+<?php endif; ?>
+
+    if (selectedTab == '')
+    {
+        var selectedTab = $ (".panel-options > .nav-tabs > li.active > a").attr ("workflowid");
+    }
+
+//    $('.i-checks').iCheck({
+//        checkboxClass: 'icheckbox_square-green',
+//        radioClass: 'iradio_square-green'
+//    });
+//
+//    $('.i-checks').on('ifChanged', function(event){
+//
+//        var sectionid = $(this).attr("sectionid");
+//        var workflowid = $(this).attr("workflowid");
+//
+//        if($(this).is(":checked")){
+//           var isChecked = true;
+//        } else {
+//            var isChecked = false;
+//        }
+//
+//        $.ajax({
+//            type: "GET",
+//            url: '/steps/goldenSample/' + sectionid + "/" + workflowid + "/" + isChecked + "/" + $(".selected2").attr("step-id"),
+//            success: function (response) {
+//            }
+//        });
+//    });
+
+    $ (".addNewOne").click (function ()
+    {
+
+        $ (this).hide ();
+
+        $ (".saveStep").hide ();
+        $ (".completeStep").hide ();
+
+        $.ajax ({
+            type: "GET",
+            url: '/FormBuilder/tasks/createNewElement/' + $ (".panel-options > .nav-tabs > li.active > a").attr ("workflowid"),
+            success: function (response)
+            {
+                $ (".stepsWrapper").slideUp ();
+                $ (".stepsWrapper").html ("");
+                $ (".AddNewWrapper").html (response);
+                $ (".events-content").slideToggle ();
+                $ (".AddNewWrapper").slideToggle ();
+
+                fileinit ();
+
+                $ ("#Close").click (function ()
+                {
+                    $ (".openTasks").click ();
+
+                    console.log (".nav-tabs > li > a[workflowid=" + selectedTab + "]");
+
+                    setTimeout (function ()
+                    {
+                        $ (".nav-tabs > li > a[workflowid=" + selectedTab + "]").click ();
+                        $ (this).show ();
+                    }, 500);
+                });
+
+                $ ("#saveNew").off ();
+                $ ("#saveNew").on ("click", function ()
+                {
+                    $ ("form#AddNewForm").submit ();
+                    $ (this).show ();
+                });
+
+                $ ("form#AddNewForm").off ();
+                $ ("form#AddNewForm").submit (function (event)
+                {
+                    alert("Mike");
+                    var formData = new FormData ($ (this)[0]);
+
+                    $ (".alert-danger").hide ();
+                    $ (".alert-success").hide ();
+
+                    $.ajax ({
+                        url: '/FormBuilder/tasks/saveNewElement/' + $ (".panel-options > .nav-tabs > li.active > a").attr ("workflowid"),
+                        type: 'POST',
+                        data: formData,
+                        async: false,
+                        cache: false,
+                        contentType: false,
+                        processData: false,
+                        success: function (response)
+                        {
+                            response = $.trim (response);
+
+                            if (response != "")
+                            {
+                                var objResponse = $.parseJSON (response);
+                                $.each (objResponse, function (index, element)
+                                {
+
+                                    $ ("#" + element["id"] + "Warning").slideDown ();
+                                });
+                            }
+                            else
+                            {
+                                $ ("#elementSuccess").slideDown ().delay (2000).slideUp ();
+
+                                setTimeout (function ()
+                                {
+                                    $ (".openTasks").click ();
+
+                                    setTimeout (function ()
+                                    {
+                                        $ (".nav-tabs > li > a[workflowid=" + selectedTab + "]").click ();
+                                    }, 500);
+
+                                }, 2000);
+                            }
+
+                        },
+                        error: function ()
+                        {
+                            alert ("error in ajax form submission");
+                        }
+                    });
+
+                    return false;
+                });
+            }
+        });
+    });
+
+    function fileinit ()
+    {
+        function getFile ()
+        {
+            $ ("#uploadFile").click ();
+            $ ("#uploadSuccessWrapper").hide ();
+        }
+
+        function progressHandlingFunction (e)
+        {
+            if (e.lengthComputable)
+            {
+                $ ('#progress').attr ({value: e.loaded, max: e.total});
+            }
+        }
+
+        $ (':file').unbind ();
+        $ (':file').change (function ()
+        {
+            console.log ("attachment file chnaged")
+            $ ("#filelist").html ("");
+
+            var file = this.files[0];
+            var Fname = file.name;
+            var Fsize = file.size;
+            var Ftype = file.type;
+
+            if (Fsize < 16000000)
+                console.log ("LEXI");
+            $ ("#filelist").append ("<div style=\"padding: 5px; color:#808080;\"> <i style=\"font-size:20px\" class=\"fa fa-file-image-o\"></i> <span style=\"\">&nbsp;&nbsp;" + Fname + " - " + Math.floor (Fsize / 1048576 * 100) / 100 + "MB</span></div>");
+            console.log (Fname);
+
+            //$("#uploadfile").show();
+            $ ("#filelist").show ();
+        });
+    }
+
+    //    setTimeout (function ()
+//    {
+//        $ (".events > ol li > a.selected").click ();
+//    }, 1000);
+
+
+
+<?php if ( $blComplete === true ): ?>
+        $ ("#Save").hide ();
+        $ ("#finish").hide ();
+        $ ("#Next").hide ();
+        $ (".taskStatus").show ();
+        $ (".rejectionDiv").show ();
+<?php endif; ?>
+
+</script>

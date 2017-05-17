@@ -1,0 +1,115 @@
+<link href="/FormBuilder/public/css/kanban/styles.css" rel="stylesheet" type="text/css">
+<script src="/FormBuilder/public/js/kanban/tools.js" type="text/javascript"></script>
+<script src="/FormBuilder/public/js/kanban/kanban.js" type="text/javascript"></script>
+
+<style>
+    .kb_user {
+        float:left;
+        margin-right: 10px;
+    }
+
+    .selectedUser > img {
+        border: 3px solid #f8ac59
+    }
+
+    h4, label {
+        color: #FFF;
+    }
+
+    .kb_queue_inner h4 {
+        color: #000;
+    }
+</style>
+
+<div id="kanban"></div>
+
+
+<?php
+if ( $requestType !== null && $requestType !== "null" )
+{
+    $arrColumns = json_encode ($arrColumns[$requestType]);
+}
+else
+{
+    //$arrColumns = array()
+}
+?>
+
+
+<script>
+
+    var requestType = null;
+
+<?php if ( $requestType !== null ): ?>
+        requestType = <?= $requestType ?>;
+<?php endif; ?>
+
+    $ (document).ready (function ()
+    {
+        $ ('#kanban').kanban ({
+            columns: <?= $columns ?>
+            , teams: <?= $teams ?>
+            , arrDeptWorkflows: <?= json_encode ($arrDeptWorkflows) ?>
+//             , users: [
+//                {'uid': '1', 'name': 'michael.hampton', 'src': "michael.hampton.jpeg", 'teamId': 1}, 
+//                {'uid': '2', 'name': 'lexi.hampton', 'src': "lexi.hampton.jpg", 'teamId': 2}, 
+//                {'uid': '3', 'name': 'uan.hampton', 'src': "uan.hampton.jpg", 'teamId': 3}
+//             ]
+            , show_teams: false
+            , url: '/FormBuilder/scheduler/getKanbanData'
+            , user_uid: '1'
+            , img_dir: '/FormBuilder/public/img/users/'
+            , board_name: 'IT Department'
+            , current_user: {"uid": 2, "name": "admin", "src": "admin.jpeg"}
+            , edit_board: true
+            , def_user_img: '/FormBuilder/public/img/users/'
+            , prioritys: {
+                3: {color: 'RED', name: 'C', class: 'success-element'},
+                1: {color: 'GREEN', name: 'A', class: 'danger-element'},
+                2: {color: '#003C69', name: 'B', class: 'warning-element'}
+            }
+            , custom_actions: {
+                custom: {'icon': '⥮', 'text': 'Custom', 'action': function ()
+                    {
+                        $ ('#kanban').trigger ('add_filter', {'value': 'New'});
+                    }},
+            }
+            , reloadRequest: function (requestId)
+            {
+                if (requestId !== null && requestId !== "null")
+                {
+                    location.href = "/FormBuilder/scheduler/kanban/" + requestId;
+                }
+                else
+                {
+                    location.href = "/FormBuilder/scheduler/kanban/";
+                }
+
+                return false;
+            }
+            , requestType: requestType
+        });
+
+        $ (".editTeams").click (function ()
+        {
+
+            $.get ("/FormBuilder/scheduler/editTeams/" + $ ("#requestType").val (), function (data, status)
+            {
+                $ ("#myModal5").html ("");
+                $ ("#myModal5").html (data);
+                $ ("#myModal5").modal ("show");
+            });
+
+            return false;
+        });
+    });
+
+
+
+
+
+</script>
+
+
+<div class="modal inmodal fade" id="myModal5" tabindex="-1" role="dialog"  aria-hidden="true">
+</div>

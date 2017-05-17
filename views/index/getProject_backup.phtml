@@ -1,0 +1,453 @@
+<style>
+    .align-left {
+        text-align: left;
+    }
+</style>
+
+
+<?php
+
+function ago ($time)
+{
+    $periods = array("second", "minute", "hour", "day", "week", "month", "year", "decade");
+    $lengths = array("60", "60", "24", "7", "4.35", "12", "10");
+
+    $now = time ();
+
+    $difference = $now - $time;
+    $tense = "ago";
+
+    for ($j = 0; $difference >= $lengths[$j] && $j < count ($lengths) - 1; $j++) {
+        $difference /= $lengths[$j];
+    }
+
+    $difference = round ($difference);
+
+    if ( $difference != 1 )
+    {
+        $periods[$j].= "s";
+    }
+
+    return "$difference $periods[$j] 'ago' ";
+}
+?>
+
+
+<div class="modal-dialog">
+    <div class="modal-content animated bounceInRight">
+        
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">
+                <span aria-hidden="true">×</span>
+                <span class="sr-only">Close</span>
+            </button>
+
+            <input type="hidden" id="userId" value="1">
+            <input type="hidden" id="projectId" value="<?= $projectId ?>">
+            <h4 class="modal-title"><?= $arrData[0]['project_name'] ?></h4>    
+
+            <div style="clear:both; float: left; width: 100%; margin-bottom: 6%;">
+                <?php
+                switch ($arrData[0]['project_status']) {
+                    case 1:
+                        echo '<span class="label label-danger">Active</span>';
+                        break;
+
+                    case 3:
+                        echo '<span class="label label-warning">Completed</span>';
+                        break;
+
+                    case 0:
+                        echo '<span class="label label-primary">Just Added</span>';
+                        break;
+
+                    case 4:
+                        echo '<span class="label">Rejected</span>';
+                        break;
+
+                    case 5:
+                        echo '<span class="label label-success">Accepted</span>';
+                        break;
+
+                    case 6:
+                        echo '<span class="label label-info">Assigned</span>';
+                        break;
+                }
+                ?>
+
+                <span class="label <?= $arrData[0]['style'] ?>"><?= $arrData[0]['priority_name'] ?></span>
+
+                <div style="width: 100%; float:left;">
+                    <small>Date Added: <?= $arrData[0]['date_added'] ?> Due Date: <?= $arrData[0]['due_date'] ?></small>
+                </div>
+
+            </div>
+
+            <div class="row col-md-8 text-center col-md-offset-2 pull-left" style="margin-top: 2%;">
+                <div projectId="<?= $projectId ?>" class="col-md-3 openPoject pointer">
+                    <div class="infont col-md-3 col-sm-4">
+                        <i class="fa fa-th-large icon-medium"></i>
+                    </div>
+                </div>
+                
+                <div projectId="<?= $projectId ?>" class="col-md-3 openTasks pointer">
+                    <div class="infont col-md-3 col-sm-4">
+                        <i class="fa fa-tasks icon-medium"></i>
+                    </div>
+                </div>
+
+                <div projectId="<?= $projectId ?>" class="col-md-3 openComments pointer">
+                    <div class="infont col-md-3 col-sm-4">
+                        <i class="fa fa-comment-o icon-medium"></i> 
+                    </div>
+
+                    <span class="label label-warning" style="position: relative; top: -9px; padding: 2px 4px;"><?= $arrData[0]['commentCount'] ?></span>
+                </div>
+
+                <div projectId="<?= $projectId ?>" class="col-md-3 openAttachments pointer">
+                    <div class="infont col-md-3 col-sm-4">
+                        <i class="fa fa-paperclip icon-medium"></i> 
+                    </div>
+
+                    <span class="label label-warning" style="position: relative; top: -9px; padding: 2px 4px;"><?= $arrData[0]['attachmentCount'] ?></span>
+                </div>
+            </div>
+            
+            <div id="reviewed" class="text-center" style="float: left; margin-top: 5%; background: #ebccd1 none repeat scroll 0 0; color: #a94442; padding: 4px 0; display: none;">
+                <h4>This step does not meet the requirements and it will be reviewed. The participants have been notified.</h4>
+            </div>
+        </div>
+
+        <div class="modal-body modal-panel modal-details">
+
+            <div class="text-center" >
+                <!--<div id="Breadcrumbs" class="col-md-8 col-xs-12 col-md-offset-2">		
+                    <div id="1" class="stepper col-sm-2 col-xs-2  <?= ($arrData[0]["project_status"] < 0) ? " waiting " : ""; ?> style="">
+                        <div class="img-circle-wrapper-small<?= ($arrData[0]["project_status"] < 0) ? "-waiting" : ""; ?>" >
+
+                            <?php
+                            if ( !empty ($arrData[0]["added_by"]) )
+                                echo '<div class="backgound-image-trick-small" style="background-image : url(/FormBuilder/public/img/users/' . $arrData[0]["added_by"] . '.jpeg)" ></div>';
+                            ?>				
+                        </div>
+
+                        <smal class="tiny">Requested<br><?= $arrData[0]['added_by'] ?></smal>
+                    </div>
+
+                    <div class="line<?= (!in_array ($arrData[0]['project_status'], array(5, 3, 6, 4, 1))) ? "-waiting" : ""; ?> col-sm-1 col-xs-1">
+                        &nbsp;
+                    </div>
+
+                    <div id="1" class=" stepper col-sm-2 col-xs-2  <?= (!in_array ($arrData[0]['project_status'], array(5, 3, 6, 4, 1))) ? " waiting " : ""; ?>" style="">
+                        <div class="img-circle-wrapper-small<?= (!in_array ($arrData[0]['project_status'], array(5, 3, 6, 4, 1))) ? "-waiting" : ""; ?>" >
+                            <?php
+                            if ( !empty ($arrData[0]["accepted_by"]) )
+                                echo '<div class="backgound-image-trick-small" style="background-image : url(/FormBuilder/public/img/users/' . $arrData[0]["accepted_by"] . '.jpeg)" ></div>';
+                            ?>
+                        </div>
+
+                        <smal class="tiny">
+<?= $arrData[0]["project_status"] == 4 ? "Rejected" : "Accepted"; ?>
+                            <br><?= $arrData[0]["accepted_by"] ?>
+
+                        </smal>
+                    </div>
+
+                    <div class="line<?= (!in_array ($arrData[0]['project_status'], array(6, 3, 1))) ? "-waiting" : ""; ?> col-sm-1 col-xs-1">
+                        &nbsp;
+                    </div>
+
+                    <div id="1" class="stepper col-sm-2 col-xs-2  <?= (!in_array ($arrData[0]['project_status'], array(6, 3, 1)) ) ? " waiting " : ""; ?>" style="">
+                        <div class="img-circle-wrapper-small<?= (!in_array ($arrData[0]['project_status'], array(6, 3, 1))) ? "-waiting" : ""; ?>" >
+                            <?php
+                            if ( !empty ($arrData[0]["assigned_by"]) )
+                                echo '<div class="backgound-image-trick-small" style="background-image : url(/FormBuilder/public/img/users/' . $arrData[0]["assigned_by"] . '.jpeg)" ></div>';
+                            ?>
+                        </div>
+
+                        <smal class="tiny">Assigned<br><?= $arrData[0]["assigned_by"] ?></smal>
+                    </div>
+
+                    <div class="line<?= ($arrData[0]["project_status"] != 3) ? "-waiting" : ""; ?> col-sm-1  col-xs-1">
+                        &nbsp;
+                    </div>
+
+                    <div id="1" class="stepper col-sm-2  col-xs-2 <?= ($arrData[0]["project_status"] != 3) ? " waiting " : ""; ?>" style="">
+                        <div class="img-circle-wrapper-small<?= ($arrData[0]["project_status"] != 3) ? "-waiting" : ""; ?>" >
+                            <?php
+                            if ( !empty ($arrData[0]["completed_by"]) )
+                                if ( count ($arrCompleted) == 1 )
+                                {
+                                    echo '<div class="backgound-image-trick-small" style="background-image : url(/FormBuilder/public/img/users/' . $arrData[0]["completed_by"] . '.jpeg)" ></div>';
+                                }
+                                else
+                                {
+                                    echo '<div class="backgound-image-trick-small" style="background-image : url(/FormBuilder/public/img/users/multi.jpeg)" ></div>';
+                                }
+                            ?>
+                        </div>
+
+                        <smal class="tiny">Complete<br><?= implode ("<br>", $arrCompleted) ?></smal>
+                    </div>
+
+                </div>				
+            </div>-->
+
+            <div class="row">
+                <div class="col-lg-12">
+
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-lg-3">Created By</label>
+
+                            <div class="col-lg-6 align-left">
+                                <?= $arrData[0]['added_by'] ?>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-lg-3">Created</label>
+
+                            <div class="col-lg-6 align-left">
+                                <?= $arrData[0]['date_added'] ?>
+                            </div>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label class="col-lg-3">Priority</label>
+                                
+                            <div class="col-lg-6 align-left">
+                                <?= $arrData[0]['priority_name'] ?>
+                            </div>   
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">Description</label>
+
+                            <div class="col-lg-8 align-left" style="line-height:32px;">
+                                <?= $arrData[0]['description'] ?>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">Department</label>
+
+                            <div class="col-lg-8 align-left" style="line-height:32px;">
+                                <?= $arrData[0]['department'] ?>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-lg-3">Workflow</label>
+
+                            <div class="col-lg-6 align-left">
+                                <?= $arrData[0]['workflow_name'] ?>
+                            </div>
+                        </div>
+
+                        <?php if ( $arrData[0]['project_status'] == 0 ): ?>
+                            <!--<div class="form-group">
+                                <div class="col-lg-12">
+                                    <textarea id="reason" class="form-control" placeholder="Reason For Deny"></textarea>
+                                </div>
+
+                                <div style="display:none; margin-top: 7px; float: left; width: 95%; margin-left: 2%;" class="alert alert-danger" id="reasonWarning">
+                                    You must specify a reason for rejecting the project.
+                                </div>
+                            </div>-->
+                        <?php endif; ?>
+
+                        <?php if ( $arrData[0]['project_status'] == 5 ): ?>
+                            <div class="form-group">
+                                <label class="col-lg-3">Assign To</label>
+
+                                <div class="col-lg-6">
+                                    <select multiple="multiple" id="assignTo" name="assignTo" class="form-control">
+                                        <!--<option value="">Select User</option>-->
+
+                                        <?php
+                                        foreach ($arrUsers as $arrUser):
+                                            echo '<option value="' . $arrUser['username'] . '">' . $arrUser['username'] . '</option>';
+                                        endforeach;
+                                        ?>
+                                    </select>
+                                </div>
+
+                                <div style="display:none; margin-top: 7px; float: left; width: 95%; margin-left: 2%;" class="alert alert-danger" id="assignWarning">
+                                    You must assign a user to the project.
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
+                            <?php if ( $arrData[0]['project_status'] == 1 || $arrData[0]['project_status'] == 3 ): ?>
+                            <div class="form-group">
+                                <label class="col-lg-3">Completed</label>
+
+                                    <?php if ( in_array ($arrData[0]['project_status'], array(3, 1)) ): ?>
+                                    <div class="col-lg-8 align-left">
+                                        <?php
+                                        if ( $arrData[0]['project_status'] == 3 )
+                                        {
+                                            $percent = 100;
+                                        }
+                                        else if ( $arrData[0]['project_status'] == 1 )
+                                        {
+                                            $percent = 60;
+                                        }
+                                        ?>
+                                        <div class="progress progress-striped active m-b-sm">
+                                            <div style="width: <?= $percent ?>%;" class="progress-bar"></div>
+                                        </div>
+
+                                        <small>Project completed in <strong><?= $percent ?>%</strong>. Remaining close the project, sign a contract and invoice.</small>
+
+                                    </div>
+    <?php endif; ?>
+                            </div>
+<?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>  
+
+        <div class="modal-body modal-panel modal-comments" style="display:none">
+            These are the comments
+        </div>
+
+        <div class="modal-body modal-panel modal-attachments" style="display:none">
+            These are the attachments
+        </div>
+
+        <div class="modal-body modal-panel modal-tasks" style="display:none;">
+            These are the tasks
+        </div>
+        
+        <div id="viewTasksContainer" class="ibox float-e-margins" style="display:none;">
+            View Tasks
+        </div>
+        
+
+        <div id="addNewTask" class="ibox float-e-margins" style="display:none;">
+            
+            <input type="hidden" id="stepId" name="stepId" value="<?= $currentStep ?>">
+            
+            <div class="ibox-title">
+                <h5>Add New Task</h5>
+            </div>
+
+            <div class="ibox-content" style="float:left; width: 100%;">
+                <form class="form-horizontal" id="newTask">
+                    <div class="form-group" style="float:left; width: 100%;">
+                        <label class="col-lg-2 control-label">Task</label>
+
+                        <div class="col-lg-10">
+                            <input type="text" name="form[taskName]" id="taskName" placeholder="Task Name" class="form-control"> 
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="float:left; width: 100%;">
+                        <label class="col-lg-2 control-label">Task Summary</label>
+
+                        <div class="col-lg-10">
+                            <textarea id="taskSummary" name="form[taskSummary]" placeholder="Summary" class="form-control"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-lg-2 control-label" for="date_added">Start Date</label>
+
+                        <div class="input-group date">
+                            <span class="input-group-addon">
+                                <i class="fa fa-calendar"></i>
+                            </span>
+                            <input id="startDate" name="form[startDate]" type="text" class="form-control" value="03/04/2014">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-lg-2 control-label" for="date_added">End Date</label>
+
+                        <div class="input-group date">
+                            <span class="input-group-addon">
+                                <i class="fa fa-calendar"></i>
+                            </span>
+                            <input id="endDate" name="form[endDate]" type="text" class="form-control" value="03/04/2014">
+                        </div>
+                    </div>
+
+                    <a id="SaveNewTask" class="btn btn-primary" href="#">Save</a>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal-footer footer-comments" style="display:none;">
+            <button id="saveNewComment" type="button" class="btn btn-w-m btn-danger">Save Comment</button>
+        </div>
+
+        <div class="modal-footer footer-tasks" style="display:none;">
+            
+            <button style="display:none;" id="Previous" class="btn btn-primary">Previous</button>
+            <button style="display:none;" id="Next" class="btn btn-primary">Next</button>
+            <button id="finish" class="btn btn-primary">Save & Complete</button>
+            <button id="Save" class="btn btn-primary">Save</button>
+            <button style="display:none;" id="approveTask" class="btn btn-primary">Approve</button>
+            <button style="display:none;" id="rejectTask" class="btn btn-primary">Reject</button>
+        </div>
+
+        <div class="modal-footer footer-attachments" style="display:none;">
+            <input id="uploadfile" style="display: none; margin-top: 26px;" type="button" id="browsefile" value="Upload file "
+                   class="btn btn-w-m btn-danger">
+
+            <input onclick="getFile ()" style="<?= !$writePermission ? "display:none;" : ""; ?> width: 200px; height: 40px ; margin-top: 26px;" type="button" id="browsefile" value="Add File " class="btn btn-w-m btn-danger">
+        </div>
+
+        <div class="modal-footer footer-details">                  
+            <button type="button" class="btn btn-white" data-dismiss="modal">Close sfsf</button>  
+            <?php if ( $arrData[0]['project_status'] == 0 ): ?>
+                <!--<button id="reject" moveTo="4" type="button" class="btn btn-w-m btn-danger changeStatus">Reject</button>-->
+                <button id="accept" moveTo="5" type="button" class="btn btn-w-m btn-primary changeStatus">Accept</button>
+            <?php endif; ?>
+
+            <?php if ( $arrData[0]['project_status'] == 5 ): ?>
+                <button moveTo="6" id="assignProject" type="button" class="btn btn-primary changeStatus">Assign</button>
+            <?php endif; ?>
+
+            <?php
+            $assignedTo = array_filter (explode (",", $arrData[0]['assigned_for']));
+
+            if ( $arrData[0]['project_status'] == 6 && in_array ($_SESSION['user']['usrid'], $assignedTo) ):
+                ?>
+                <button moveTo="1" id="startProject" type="button" class="btn btn-w-m btn-info changeStatus">Start Project</button>
+<?php endif; ?>
+
+<?php if ( $arrData[0]['project_status'] == 1 && in_array ($_SESSION['user']['usrid'], $assignedTo) ): ?>
+                <button moveTo="3" id="completeProject" type="button" class="btn btn-w-m btn-info changeStatus">Complete Project</button>
+<?php endif; ?>
+
+            <!--
+            <button type="button" id="test" class="btn btn-primary">Test</button>-->
+        </div>       
+    </div>
+
+    <div id="taskDetails">
+
+    </div>
+<script src="/core/public/js/upload.js" type="text/javascript"></script>
+    <script src="/FormBuilder/public/js/getProject.js" type="text/javascript"></script>
+    <script src="/FormBuilder/public/js/modal.js" type="text/javascript"></script>
+    
+     <!-- Sweet alert -->
+
+
+
+
+    <script>
+<?php if ( $openTab == "project" )
+{ ?> $(".openPoject").click(); <?php } ?>
+<?php if ( $openTab == "comments" )
+{ ?> $(".openComments").click(); <?php } ?>
+<?php if ( $openTab == "attachments" )
+{ ?>
+        $(".openAttachments").click(); <?php } ?>
+    </script>
