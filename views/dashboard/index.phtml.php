@@ -19,7 +19,11 @@ $percentage = count ($incompleteProjects) / count ($arrCompletedProjects) * 100;
                 </div>
                 <div class="ibox-content">
                     <h1 class="no-margins"><?= count ($arrCompletedProjects) . " / " . count ($arrAllProjects) ?></h1>
-
+                    <?php
+                    $text = array('arrCompletedProjects', 'arrAllProjects');
+                    
+                    print_r($text);
+                    ?>
                 </div>
             </div>
         </div>

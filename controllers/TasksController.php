@@ -284,9 +284,7 @@ class TasksController extends BaseController
                     );
 
                     $objAttachments = new Attachments();
-                    $objAttachments->loadObject ($arrData);
-                    $fileId = $objAttachments->save ();
-                    $arrFiles[] = $fileId;
+                    $arrFiles = $objAttachments->loadObject ($arrData);
                 }
             }
             else
@@ -394,6 +392,7 @@ class TasksController extends BaseController
 
         $objStepPermissions = new StepPermissions ($step);
         $blHasPermission = $objStepPermissions->validateUserPermissions ($objUsersArr[0]);
+         $this->view->canSave = false;
 
         if ( !$blHasPermission )
         {
