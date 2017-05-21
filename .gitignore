@@ -1,0 +1,7 @@
+#!/bin/sh
+
+exec vim "$@"
+
+*.phtml.php
+config/
+logs/
