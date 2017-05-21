@@ -1,46 +1,42 @@
 <?php
+
 use Phalcon\Mvc\View;
+
 class CommentsController extends BaseController
-{ 
-    public function getJobCommentsOnlyAction($projectId)
+{
+
+    public function getJobCommentsOnlyAction ($projectId)
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
         $objComments = new Comments();
-        $this->view->arrComments = $objComments->getAllComments($projectId);
+        $this->view->arrComments = $objComments->getAllComments ($projectId);
     }
-    
-    public function saveCommentsAction()
+
+    public function saveCommentsAction ()
     {
-        $this->view->disable();
-        $objComments = new Comments();
-        
-        $comment = $this->request->getPost("comment", "string");
-        $projectId = $this->request->getPost("projectId", "int");
-        
-        $arrComment = array(
-            "source_id" => $projectId, 
-            "comment" => $comment, 
-            "username" => $_SESSION['user']['username'], 
-            "datetime" => date("Y-m-d H:i:s")
-            );
-        
-        
-        if(empty($comment)) {
-            echo 'ERROR';
-            return false;
-        }
-        
-        $objComments->loadObject($arrComment);
-        $objComments->save();
+        $this->view->disable ();
+
+        $objCases = new Cases();
+        $objCases->saveCaseNote ($_POST['projectId'], $_SESSION['user']['username'], $_POST['comment'], true);
+        die;
     }
-    
-    public function getCommentsAction($projectId)
+
+    public function getCommentsAction ($projectId)
     {
         $this->view->projectId = $projectId;
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
-        $objComments = new Comments();
-        $this->view->arrComments = $objComments->getAllComments($projectId);
+
+        $objCases = new Cases();
+        $this->view->arrComments = $objCases->getCaseNotes ($projectId, $_SESSION['user']['username'], array(
+            "start" => 0,
+            "limit" => 30,
+            "sort" => "datetime",
+            "dir" => "DESC"
+                )
+        );
+
+
         $this->view->writePermission = true;
-        
     }
+
 }

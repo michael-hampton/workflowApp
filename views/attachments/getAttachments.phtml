@@ -7,7 +7,7 @@
         <div id="upfilewrapper" style="display: none;">
             <input type="file" class="TaskManagerButtonBig" name="file" id="file" multiple/>
         </div>
-        
+
         <ul id="filelist"></ul>
     </div>
 
@@ -16,21 +16,17 @@
 
     <div class="col-lg-12 ibox-content attachments-list">
         <?php
-        foreach ($attachmnets as $jobCommentsResultKeys => $jobCommentsResultValues) :
-            $strFile = str_replace ("C:/xampp/htdocs", "", $jobCommentsResultValues['filename']);
-            $strFileName = substr (strrchr ($jobCommentsResultValues['filename'], "/"), 1);
-
-
+        foreach ($attachmnets as $attachmentKey => $attachment) :
             echo '<div class="file-box">
                                         <div class="file">
-                                            <a href="/FormBuilder/attachments/download/' . $jobCommentsResultValues['id'] . '" target="_blank">
+                                            <a href="' . $attachment['download_path'] . $attachment['filename'] . '">
                                                 <div class="icon">
                                                     <i class="fa fa-file"></i>
                                                 </div>
                                                 <div class="file-name">
-                                                   ' . $jobCommentsResultValues['filename'] . '
+                                                   ' . $attachment['filename'] . '
                                                     <br>
-                                                    <small>Added:' . $jobCommentsResultValues['uploaded_by'] . ' <br> ' . date ("M d, Y", strtotime ($jobCommentsResultValues["date_uploaded"])) . '</small>
+                                                    <small>Added:' . $attachment['uploaded_by'] . ' <br> ' . date ("M d, Y", strtotime ($attachment["date_uploaded"])) . '</small>
                                                 </div>
                                             </a>
                                         </div>
@@ -76,7 +72,8 @@
      });
      });*/
 
-    $ ("#uploadfile").click (function (e)
+    $ ("#uploadfile").off ();
+    $ ("#uploadfile").on ("click", function ()
     {
 
         $ ("form#fileUploadForm").submit ();
@@ -145,8 +142,8 @@
                     $ (".openAttachments > span").text (parseInt ($ (".openAttachments > span").text ()) + 1);
                 }
 
-               $(".openAttachments").click();
-               $("#SearchButton").click();
+                $ (".openAttachments").click ();
+                $ ("#SearchButton").click ();
 
             }
         });

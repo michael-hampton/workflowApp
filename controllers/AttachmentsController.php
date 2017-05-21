@@ -51,11 +51,10 @@ class AttachmentsController extends BaseController
                     "filename" => $fileName,
                     "date_uploaded" => date ("Y-m-d H:i:s"),
                     "uploaded_by" => $_SESSION['user']['username'],
-                    "contents" => $fileContents);
+                    "files" => $_FILES);
 
                 $objAttachments = new Attachments();
                 $objAttachments->loadObject ($arrData);
-                $fileId = $objAttachments->save ();
             }
         }
     }
