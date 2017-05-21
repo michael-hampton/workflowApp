@@ -253,89 +253,11 @@ class InboxController extends BaseController
     {
         $this->view->disable ();
 
+        $objCases = new Cases();
 
-        $arrData['form'] = array("description" => $_POST['form']['description'],
-            "name" => $_POST['form']['name'],
-            "priority" => 1,
-            "deptId" => 1,
-            "workflow_id" => $_POST['workflowid'],
-            "added_by" => $_SESSION['user']['username'],
-            "date_created" => date ("Y-m-d"),
-            "project_status" => 1,
-            "dueDate" => date ("Y-m-d")
-        );
+        $arrFiles = isset ($_FILES['fileUpload']) ? $_FILES : array();
 
-        $arrData['form']['status'] = "NEW PROJECT";
-        $arrData['form']['dateCompleted'] = date ("Y-m-d H:i:s");
-        $arrData['form']['claimed'] = $_SESSION['user']['username'];
-
-        $objSave = new Save();
-        $objWorkflow = new Workflow ($_POST['workflowid']);
-        $objStep = $objWorkflow->getNextStep ();
-        $validation = $objStep->save ($objSave, $arrData['form']);
-        $projectId = $objSave->getId ();
-
-        $arrFiles = array();
-
-        if ( isset ($_FILES['fileUpload']) )
-        {
-            if ( isset ($_FILES['fileUpload']['name'][0]) && !empty ($_FILES['fileUpload']['name'][0]) )
-            {
-                foreach ($_FILES['fileUpload']['name'] as $key => $value) {
-
-                    $fileContent = file_get_contents ($_FILES['fileUpload']['tmp_name'][$key]);
-
-                    $arrData = array(
-                        "source_id" => $_SESSION['selectedRequest'],
-                        "filename" => $value,
-                        "date_uploaded" => date ("Y-m-d H:i:s"),
-                        "uploaded_by" => $_SESSION['user']['username'],
-                        "contents" => $fileContent,
-                        "files" => $_FILES,
-                        "step" => $objStep
-                    );
-
-                    $objAttachments = new Attachments();
-                    $arrFiles = $objAttachments->loadObject ($arrData);
-                    $arrFiles[] = $id;
-                }
-            }
-            else
-            {
-                $arrErrors[] = "file";
-            }
-        }
-
-
-        if ( empty ($arrErrors) )
-        {
-            $_POST['form']['source_id'] = $_SESSION['selectedRequest'];
-
-            if ( isset ($arrFiles) && !empty ($arrFiles) )
-            {
-                $_POST['form']['file2'] = implode (",", $arrFiles);
-            }
-
-            $_POST['form']['source_id'] = $projectId;
-
-            $_POST['form']['status'] = "NEW";
-            $_POST['form']['workflow_id'] = $_POST['workflowid'];
-            $_POST['form']['claimed'] = $_SESSION["user"]["username"];
-            $_POST['form']['dateCompleted'] = date ("Y-m-d H:i:s");
-
-            $objElements = new Elements ($projectId);
-            $objWorkflow = new Workflow ($_POST['workflowid']);
-            $objStep = $objWorkflow->getNextStep ();
-
-            $validation = $objStep->save ($objElements, $_POST['form']);
-
-            if ( $validation === false )
-            {
-                $validate['validation'] = $objStep->getFieldValidation ();
-                echo json_encode ($validate);
-                return false;
-            }
-        }
+        $objCases->addCase ($_POST['workflowid'], $_SESSION['user']['usrid'], $_POST, $arrFiles);
     }
 
     public function filterCasesAction ($workflowId)
@@ -373,7 +295,7 @@ class InboxController extends BaseController
         $category = empty ($_POST['category']) ? null : $_POST['category'];
         $user = empty ($_POST['user']) ? null : $_POST['user'];
         $status = empty ($_POST['status']) ? null : $_POST['status'];
-        
+
         $objCases = new Cases();
 
         $this->view->arrLists = $objCases->getList (
@@ -388,8 +310,8 @@ class InboxController extends BaseController
                     "action" => "search"
                 )
         );
-        
-        $this->view->pagination = $this->getPagination("casePagination");
+
+        $this->view->pagination = $this->getPagination ("casePagination");
     }
 
 }

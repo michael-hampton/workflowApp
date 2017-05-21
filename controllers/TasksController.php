@@ -267,33 +267,8 @@ class TasksController extends BaseController
 
         if ( isset ($_FILES['fileUpload']) )
         {
-            if ( isset ($_FILES['fileUpload']['name'][0]) && !empty ($_FILES['fileUpload']['name'][0]) )
-            {
-                foreach ($_FILES['fileUpload']['name'] as $key => $value) {
-                    $fileContent = file_get_contents ($_FILES['fileUpload']['tmp_name'][$key]);
-
-                    $arrData = array(
-                        "source_id" => $_SESSION['selectedRequest'],
-                        "filename" => $value,
-                        "date_uploaded" => date ("Y-m-d H:i:s"),
-                        "uploaded_by" => $_SESSION['user']['username'],
-                        "contents" => $fileContent,
-                        "files" => $_FILES,
-                        "file_type" => $_POST['document_type'],
-                        "step" => $objStep
-                    );
-
-                    $objAttachments = new Attachments();
-                    $arrFiles = $objAttachments->loadObject ($arrData);
-                }
-            }
-            else
-            {
-                if ( $completeStep == 1 )
-                {
-                    $arrErrors[] = "file";
-                }
-            }
+           $objCases = new Cases();
+           $arrFiles = $objCases->uploadCaseFiles ($_FILES, $_SESSION['selectedRequest'], $objStep);
         }
 
         $arrStepData['claimed'] = $_SESSION["user"]["username"];
@@ -655,6 +630,7 @@ class TasksController extends BaseController
 
         if ( $status == "REJECTED" )
         {
+            
             if ( $workflow == 7 )
             {
 
@@ -842,131 +818,4 @@ class TasksController extends BaseController
 
         return $html;
     }
-
-    public function createNewElementAction ($workflow)
-    {
-        $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
-        $objWorkflow = new Workflow ($workflow, null);
-        $objStep = $objWorkflow->getNextStep ();
-
-        $arrFields = $objStep->getFields ();
-
-        $objFprmBuilder = new FormBuilder ("AddNewForm");
-
-        foreach ($arrFields as $arrField) {
-            $objFprmBuilder->addElement (array("type" => $arrField->getFieldType (), "label" => $arrField->getLabel (), "name" => $arrField->getFieldName (), "id" => $arrField->getFieldId ()));
-        }
-
-        $html = '<div style="display:none;" class="alert alert-warning">Element could not be saved successfully </div>';
-        $html .= '<div style="display:none;" id="fileWarning" class="alert alert-warning">You must upload a file</div>';
-        $html .= '<div style="display:none;" id="elementSuccess" class="alert alert-success">Element was saved successfully</div>';
-        $html .= $objFprmBuilder->render ();
-        $html .= '<input type="hidden" id="startingStep" name="form[current_step]" value="' . $startingStep . '">';
-        $html .= '<button id="saveNew" type="button" class="btn btn-primary btn-sm m-l-xs pull-right">Save</button>';
-        $html .= '<button id="Close" type="button" class="btn btn-primary btn-sm pull-right">Close</button>';
-
-
-        $this->view->html = $html;
-    }
-
-    public function saveNewElementAction ($workflow)
-    {
-        $arrErrors = array();
-        $arrFiles = array();
-
-        $objWorkflow = new Workflow ($workflow);
-        $objStep = $objWorkflow->getNextStep ();
-        $stepId = $objStep->getStepId ();
-
-        if ( isset ($_FILES['fileUpload']) )
-        {
-            if ( isset ($_FILES['fileUpload']['name'][0]) && !empty ($_FILES['fileUpload']['name'][0]) )
-            {
-                foreach ($_FILES['fileUpload']['name'] as $key => $value) {
-
-                    $fileContent = file_get_contents ($_FILES['fileUpload']['tmp_name'][$key]);
-
-                    $arrData = array(
-                        "source_id" => $_SESSION['selectedRequest'],
-                        "filename" => $value,
-                        "date_uploaded" => date ("Y-m-d H:i:s"),
-                        "uploaded_by" => $_SESSION['user']['username'],
-                        "contents" => $fileContent,
-                        "files" => $_FILES,
-                        "step" => $objStep
-                    );
-
-                    $objAttachments = new Attachments();
-                    $objAttachments->loadObject ($arrData);
-                    $id = $objAttachments->save ();
-                    $arrFiles[] = $id;
-                }
-            }
-            else
-            {
-                $arrErrors[] = "file";
-            }
-        }
-
-
-        if ( empty ($arrErrors) )
-        {
-            $_POST['form']['source_id'] = $_SESSION['selectedRequest'];
-
-            if ( isset ($arrFiles) && !empty ($arrFiles) )
-            {
-                $_POST['form']['file2'] = implode (",", $arrFiles);
-            }
-
-            $_POST['form']['status'] = "NEW";
-            $_POST['form']['workflow_id'] = $workflow;
-            $_POST['form']['claimed'] = $_SESSION["user"]["username"];
-            $_POST['form']['dateCompleted'] = date ("Y-m-d H:i:s");
-
-            $objElements = new Elements ($_SESSION['selectedRequest']);
-
-            $validation = $objStep->save ($objElements, $_POST['form']);
-
-            if ( $validation === false )
-            {
-                $validate['validation'] = $objStep->getFieldValidation ();
-                echo json_encode ($validate);
-                return false;
-            }
-
-            $this->view->disable ();
-
-
-//            $objWorkflow = new Workflow (null, null, $objElements);
-//            $validate = $objWorkflow->complete ($_POST['form'], $objElements);
-//
-//            if ( $validate === false )
-//            {
-//                $validate['validation'] = $objWorkflow->getObjValidation ();
-//            }
-//
-//
-//            if ( !empty ($validate['validation']) )
-//            {
-//                echo json_encode ($validate);
-//                return false;
-//            }
-//
-//
-//
-//            //$validation = $objWorkflow->complete (array("element" => $_POST['form']));
-//
-//            if ( !empty ($validation['validation']) )
-//            {
-//                echo json_encode ($validation['validation']);
-//                return false;
-//            }
-        }
-        else
-        {
-            echo json_encode ($arrErrors);
-            return false;
-        }
-    }
-
 }
