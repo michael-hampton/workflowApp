@@ -20,7 +20,11 @@ class InboxController extends BaseController
 
         $objLists = new Lists();
         $objLists->loadList ("inbox", array("userId" => $_SESSION['user']['usrid']));
-        $this->view->arrCounters = $objLists->getCounters ();
+        
+        $objUsers = new UsersFactory($_SESSION['user']['usrid']);
+        $arrUser = $objUsers->getUsers();
+        
+        $this->view->arrCounters = $objLists->getCounters ($arrUser[0]);
     }
 
     public function searchMessagesAction ($status, $page = 0, $strOrderBy = "ns.date_sent", $strOrderDir = "DESC")
@@ -114,9 +118,6 @@ class InboxController extends BaseController
         /*         * ************************************************************************* */
         /*                      PAGINGATION BEGIN
          * *************************************************************************** */
-
-        $maxPagesBoxesUpAndDown = $this->maxPagesBoxesUpAndDown;
-        $totalPageBoxes = ($maxPagesBoxesUpAndDown * 2) + 1;
 
         $currentPageorders = $_SESSION["pagination"]["total_counter"] - (PRODUCTS_PAGE_LIMIT * $_SESSION["pagination"]["current_page"]);
         if ( $currentPageorders > PRODUCTS_PAGE_LIMIT )

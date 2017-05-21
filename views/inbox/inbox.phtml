@@ -390,7 +390,36 @@ Primary style
 
 </style>
 
+<?php
+$_SESSION['inboxCounter'] = 0;
+ $_SESSION['draftCounter'] = 0;
 
+function buildCounters ($arrCounters)
+{
+    $arrColours = array("text-navy", "text-danger", "text-primary", "text-info", "text-warning", "text-primary", "text-info", "text-warning", "text-warning", "text-primary", "text-info", "text-warning");
+    $html = '';
+    foreach ($arrCounters as $key => $arrCounter):
+
+        if ( $arrCounter['item'] == "CASES_INBOX" )
+        {
+            $_SESSION['inboxCounter'] = $arrCounter['count'];
+        }
+        elseif ( $arrCounter['item'] == "CASES_DRAFT" )
+        {
+            $_SESSION['draftCounter'] = $arrCounter['count'];
+        }
+        else
+        {
+            $html .= '<li><a list-type="' . $arrCounter['item'] . '" href="#"> <i class="fa fa-circle ' . $arrColours[$key] . '"></i> ' . $arrCounter['item'] . " (" . $arrCounter['count'] . ") " . '</a></li>';
+        }
+
+    endforeach; 
+    
+    return $html;
+}
+
+$listCounter = buildCounters ($arrCounters);
+?>
 
 <div class="wrapper wrapper-content">
     <div class="row">
@@ -403,10 +432,10 @@ Primary style
                         <h5>Folders</h5>
                         <ul class="folder-list m-b-md" style="padding: 0">
                             <li><a class="addProcess" href="#"> <i class="fa fa-plus-square"></i> New Case</a></li>
-                            <li><a class="changeStatus" status="1" href="#"> <i class="fa fa-inbox "></i> Inbox <span class="label label-warning pull-right">16</span> </a></li>
+                            <li><a class="changeStatus" status="1" href="#"> <i class="fa fa-inbox "></i> Inbox <span class="label label-warning pull-right"><?= $_SESSION['inboxCounter'] ?></span> </a></li>
                             <li><a class="changeStatus" href="#"> <i class="fa fa-envelope-o"></i> Send Mail</a></li>
                             <li><a class="changeStatus" status="8" href="#" href="mailbox.html"> <i class="fa fa-certificate"></i> Important</a></li>
-                            <li><a class="changeStatus" href="#" status="2" href="mailbox.html"> <i class="fa fa-file-text-o"></i> Drafts <span class="label label-danger pull-right">2</span></a></li>
+                            <li><a class="changeStatus" href="#" status="2" href="mailbox.html"> <i class="fa fa-file-text-o"></i> Drafts <span class="label label-danger pull-right"><?= $_SESSION['draftCounter'] ?></span></a></li>
                             <li><a class="changeStatus" href="#" href="mailbox.html"> <i class="fa fa-trash-o"></i> Trash</a></li>
                             <li><a class="changeStatus" href="#" status="3" href="#"> <i class="fa fa-trash-o"></i> Archived</a></li>
                         </ul>
@@ -418,13 +447,9 @@ Primary style
 
                         <h5>Categories</h5>
                         <ul class="category-list" style="padding: 0">
+                            <?=            $listCounter; ?>
 
-                            <?php
-                            $arrColours = array("text-navy", "text-danger", "text-primary", "text-info", "text-warning");
-                            foreach ($arrCounters as $key => $arrCounter):
-                                ?>
-                                <li><a list-type="<?= $arrCounter['item'] ?>" href="#"> <i class="fa fa-circle <?= $arrColours[$key] ?>"></i> <?= $arrCounter['item'] . " (" . $arrCounter['count'] . ") " ?></a></li>
-                            <?php endforeach; ?>
+
                         </ul>
 
                         <!--                        <h5 class="tag-title">Labels</h5>
@@ -486,13 +511,11 @@ Primary style
 
                     <tbody>
 
-                        <?php
-                        foreach ($arrNotifications as $key => $arrNotification):
+<?php
+foreach ($arrNotifications as $key => $arrNotification):
 
-                            $arrNotification['project']->setAuditData ();
-
-                            $class = $arrNotification['notifications']->getHasRead () == 0 ? 'unread' : 'read';
-                            ?>
+    $class = $arrNotification['notifications']->getHasRead () == 0 ? 'unread' : 'read';
+    ?>
 
                             <tr class="<?= $class ?> mailItem">
                                 <td id="<?= $arrNotification['notifications']->getId () ?>" class="check-mail">
@@ -505,9 +528,9 @@ Primary style
                                 <td class="text-right mail-date"><?= $arrNotification['notifications']->getDateSent () ?></td>
                             </tr>
 
-                            <?php
-                        endforeach;
-                        ?>
+    <?php
+endforeach;
+?>
 
                     </tbody>
                 </table>
@@ -563,7 +586,7 @@ Primary style
             success: function (response)
             {
                 $ (".mail-box").html (response);
-                $(".mail-box-header").hide();
+                $ (".mail-box-header").hide ();
                 rebind ();
             },
             error: function (request, status, error)
