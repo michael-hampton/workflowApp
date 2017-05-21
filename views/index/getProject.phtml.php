@@ -155,7 +155,7 @@ if ( isset ($JSON['job']['date_rejected']) )
                             <label class="col-lg-3 control-label">Department</label>
 
                             <div class="col-lg-8 align-left" style="line-height:32px;">
-<?= $arrData[0]['department_id'] ?>
+<?= $JSON['job']['deptId'] ?>
                             </div>
                         </div>
 
@@ -167,7 +167,7 @@ if ( isset ($JSON['job']['date_rejected']) )
                             </div>
                         </div>-->
 
-<?php if ( $arrData[0]['project_status'] == 0 ): ?>
+<?php if ($JSON['job']['project_status'] == 0 ): ?>
                             <!--<div class="form-group">
                                 <div class="col-lg-12">
                                     <textarea id="reason" class="form-control" placeholder="Reason For Deny"></textarea>
@@ -179,7 +179,7 @@ if ( isset ($JSON['job']['date_rejected']) )
                             </div>-->
                         <?php endif; ?>
 
-<?php if ( $arrData[0]['project_status'] == 5 ): ?>
+<?php if ( $JSON['job']['project_status'] == 5 ): ?>
                             <div class="form-group">
                                 <label class="col-lg-3">Assign To</label>
 
@@ -201,18 +201,18 @@ if ( isset ($JSON['job']['date_rejected']) )
                             </div>
                         <?php endif; ?>
 
-<?php if ( $arrData[0]['project_status'] == 1 || $arrData[0]['project_status'] == 3 ): ?>
+<?php if ( $JSON['job']['project_status'] == 1 || $arrData[0]['project_status'] == 3 ): ?>
                             <div class="form-group">
                                 <label class="col-lg-3">Completed</label>
 
-                                    <?php if ( in_array ($arrData[0]['project_status'], array(3, 1)) ): ?>
+                                    <?php if ( in_array ($JSON['job']['project_status'], array(3, 1)) ): ?>
                                     <div class="col-lg-8 align-left">
                                         <?php
-                                        if ( $arrData[0]['project_status'] == 3 )
+                                        if ( $JSON['job']['project_status'] == 3 )
                                         {
                                             $percent = 100;
                                         }
-                                        else if ( $arrData[0]['project_status'] == 1 )
+                                        else if ( $JSON['job']['project_status'] == 1 )
                                         {
                                             $percent = 60;
                                         }
@@ -338,7 +338,6 @@ if ( isset ($JSON['job']['date_rejected']) )
 
     <script src="/core/public/js/upload.js" type="text/javascript"></script>
     <script src="/FormBuilder/public/js/getProject.js" type="text/javascript"></script>
-    <script src="/FormBuilder/public/js/modal.js" type="text/javascript"></script>
 
     <!-- Sweet alert -->
 

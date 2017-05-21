@@ -399,53 +399,10 @@ Primary style
                 <div class="ibox-content mailbox-content">
 
                     <div class="file-manager">
-                        <!--                        <a class="btn btn-block btn-primary compose-mail" href="mail_compose.html">Compose Mail</a>-->
-
-                        <i style="font-size: 28px;" class="fa fa-plus-square addProcess"></i>
-
-                        <div class="hiddenRequests col-lg-12 pull-left" style="display:none;">
-                            <div class="client-detail" style="height:200px; margin-bottom: 15px;">
-                                <strong>Choose a request</strong>
-
-                                <ul class="list-group clear-list">
-                                    <li class="list-group-item fist-item">
-                                        <span class="pull-right"> 
-                                            <button type="button" class="btn btn-xs btn-primary addNewProcess">+</button>
-                                        </span>
-                                        Please contact me
-                                    </li>
-                                    <li class="list-group-item">
-                                        <span class="pull-right"> 
-                                            <button type="button" class="btn btn-xs btn-primary addNewProcess">+</button>
-                                        </span>
-                                        Sign a contract
-                                    </li>
-                                    <li class="list-group-item">
-                                        <span class="pull-right"> 
-                                            <button type="button" class="btn btn-xs btn-primary addNewProcess">+</button>
-                                        </span>
-                                        Open new shop
-                                    </li>
-                                    <li class="list-group-item">
-                                        <span class="pull-right"> 
-                                            <button type="button" class="btn btn-xs btn-primary addNewProcess">+</button>
-                                        </span>
-                                        Call back to Sylvia
-                                    </li>
-                                    <li class="list-group-item">
-                                        <span class="pull-right"> 
-                                            <button type="button" class="btn btn-xs btn-primary addNewProcess">+</button>
-                                        </span>
-                                        Write a letter to Sandra
-                                    </li>
-                                </ul>
-                            </div>
-
-                        </div>
-
                         <div class="space-25"></div>
                         <h5>Folders</h5>
                         <ul class="folder-list m-b-md" style="padding: 0">
+                            <li><a class="addProcess" href="#"> <i class="fa fa-plus-square"></i> New Case</a></li>
                             <li><a class="changeStatus" status="1" href="#"> <i class="fa fa-inbox "></i> Inbox <span class="label label-warning pull-right">16</span> </a></li>
                             <li><a class="changeStatus" href="#"> <i class="fa fa-envelope-o"></i> Send Mail</a></li>
                             <li><a class="changeStatus" status="8" href="#" href="mailbox.html"> <i class="fa fa-certificate"></i> Important</a></li>
@@ -453,6 +410,12 @@ Primary style
                             <li><a class="changeStatus" href="#" href="mailbox.html"> <i class="fa fa-trash-o"></i> Trash</a></li>
                             <li><a class="changeStatus" href="#" status="3" href="#"> <i class="fa fa-trash-o"></i> Archived</a></li>
                         </ul>
+
+                        <h5>Search</h5>
+                        <ul class="folder-list m-b-md" style="padding: 0">
+                            <li><a class="advancedSearch" href="#"> <i class="fa fa-search"></i> Advanced Search</a></li>
+                        </ul>
+
                         <h5>Categories</h5>
                         <ul class="category-list" style="padding: 0">
 
@@ -555,6 +518,12 @@ Primary style
     </div>
 </div>
 
+<div class="modal inmodal fade" id="myModal6" tabindex="-1" role="dialog"  aria-hidden="true">
+</div>
+
+<div class="modal inmodal fade" id="myModal7" tabindex="-1" role="dialog"  aria-hidden="true">
+</div>
+
 <script src="/FormBuilder/public/js/plugins/iCheck/icheck.min.js"></script>
 
 <script>
@@ -584,6 +553,25 @@ Primary style
             }
         });
     }
+
+    $ (".advancedSearch").off ();
+    $ (".advancedSearch").on ("click", function ()
+    {
+        $.ajax ({
+            type: "GET",
+            url: "/FormBuilder/inbox/advancedSearch/",
+            success: function (response)
+            {
+                $ (".mail-box").html (response);
+                $(".mail-box-header").hide();
+                rebind ();
+            },
+            error: function (request, status, error)
+            {
+                console.log ("critical errror occured");
+            }
+        });
+    });
 
     $ (".category-list > li > a").off ();
     $ (".category-list > li > a").on ("click", function ()
@@ -652,7 +640,7 @@ Primary style
             data: {"searchText": searchText},
             success: function (response)
             {
-                 $(".mail-box-header").show();
+                $ (".mail-box-header").show ();
                 $ (".mail-box").html (response);
                 rebind ();
             },
@@ -662,27 +650,29 @@ Primary style
             }
         })
     }
-    
-    function searchProcesses() {
+
+    function searchProcesses ()
+    {
         $.ajax ({
-                type: "GET",
-                url: "/FormBuilder/inbox/addCase/"+processPage,
-                success: function (response)
-                {
-                    $(".mail-box-header").hide();
-                    $ (".mail-box").html (response);
-                    rebind ();
-                },
-                error: function (request, status, error)
-                {
-                    console.log ("critical errror occured");
-                }
-            });
+            type: "GET",
+            url: "/FormBuilder/inbox/addCase/" + processPage,
+            success: function (response)
+            {
+                $ (".mail-box-header").hide ();
+                $ (".mail-box").html (response);
+                rebind ();
+            },
+            error: function (request, status, error)
+            {
+                console.log ("critical errror occured");
+            }
+        });
     }
-    
-    function processPagination(page) {
+
+    function processPagination (page)
+    {
         processPage = page;
-        searchProcesses();
+        searchProcesses ();
     }
 
     function jumpToPage (pageNo)
@@ -710,8 +700,8 @@ Primary style
             }
 
             $ (this).addClass ("selected");
-            searchProcesses();
-            
+            searchProcesses ();
+
 
         });
 

@@ -273,11 +273,11 @@ class InboxController extends BaseController
         $objWorkflow = new Workflow ($_POST['workflowid']);
         $objStep = $objWorkflow->getNextStep ();
         $validation = $objStep->save ($objSave, $arrData['form']);
-        $projectId = $objSave->getId();
-        
-         $arrFiles = array();
-         
-         if ( isset ($_FILES['fileUpload']) )
+        $projectId = $objSave->getId ();
+
+        $arrFiles = array();
+
+        if ( isset ($_FILES['fileUpload']) )
         {
             if ( isset ($_FILES['fileUpload']['name'][0]) && !empty ($_FILES['fileUpload']['name'][0]) )
             {
@@ -336,6 +336,60 @@ class InboxController extends BaseController
                 return false;
             }
         }
+    }
+
+    public function filterCasesAction ($workflowId)
+    {
+        $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
+        $objCases = new Cases();
+        $this->view->arrLists = $objCases->getList (array("process" => $workflowId, "limit" => PRODUCTS_PAGE_LIMIT, "start" => 0, "userId" => $_SESSION['user']['username']));
+    }
+
+    public function filterProcessesAction ()
+    {
+        $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
+        $objWorkflow = new Workflow();
+        $this->view->arrWorkflows = $objWorkflow->getAllProcesses (0, 25, 'request_id', 'ASC', null, $_POST['searchText']);
+    }
+
+    public function advancedSearchAction ()
+    {
+        $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
+
+        $objWorkflowFctory = new WorkflowCollectionFactory();
+        $this->view->arrCategories = $objWorkflowFctory->getCategories (null, "request_type", "asc");
+
+        $objWorkflows = new Workflow();
+        $this->view->arrWorkflows = $objWorkflows->getAllProcesses (0, 25, 'workflow_name', 'ASC');
+
+        $objUsers = new UsersFactory();
+        $this->view->arrUsers = $objUsers->getUsers (null, 25, 0);
+    }
+
+    public function searchCasesAction ($page, $orderBy, $orderDir)
+    {
+        $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
+        $process = empty ($_POST['process']) ? null : $_POST['process'];
+        $category = empty ($_POST['category']) ? null : $_POST['category'];
+        $user = empty ($_POST['user']) ? null : $_POST['user'];
+        $status = empty ($_POST['status']) ? null : $_POST['status'];
+        
+        $objCases = new Cases();
+
+        $this->view->arrLists = $objCases->getList (
+                array(
+                    "user" => $user,
+                    "status" => $status,
+                    "process" => $process,
+                    "category" => $category,
+                    "limit" => PRODUCTS_PAGE_LIMIT,
+                    "start" => 0,
+                    "userId" => $_SESSION['user']['username'],
+                    "action" => "search"
+                )
+        );
+        
+        $this->view->pagination = $this->getPagination("casePagination");
     }
 
 }

@@ -390,6 +390,7 @@ class IndexController extends BaseController
             $statusId = 4;
             $this->view->blComplete = false;
         }
+
     }
 
 }
