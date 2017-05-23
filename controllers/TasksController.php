@@ -229,14 +229,6 @@ class TasksController extends BaseController
                 {
                     $arrWorkflows[$workflowId][$workflowKey]['data']['element_id'] = str_pad ($workflowId, 8, '0', STR_PAD_LEFT);
                 }
-
-                //if there is condition on the step
-                if ( isset ($arrWorkflowData["step_condition"]) && !empty ($arrWorkflowData["step_condition"]) )
-                {
-
-                    //claim step conditions from the workflow engine respose
-                    $conditions = json_decode ($arrWorkflowData["step_condition"], true);
-                }
             }
 
             $this->view->arrSteps = $arrSteps;
@@ -351,7 +343,6 @@ class TasksController extends BaseController
         $showClaimed = false;
         $canReject = false;
         $blIsClaimed = false;
-        $blHasPermission = true;
         $status = "";
         $blCompleted = false;
         $this->view->review = false;
@@ -482,10 +473,6 @@ class TasksController extends BaseController
                 $this->view->requiredRole = $arrConditions["permissionId"];
             }
         }
-        else
-        {
-            
-        }
 
         if ( isset ($objProject->object['audit_data']['elements'][$id]['steps'][$step]["claimed"]) &&
                 !empty ($objProject->object['audit_data']['elements'][$id]['steps'][$step][$step]) &&
@@ -525,7 +512,6 @@ class TasksController extends BaseController
                 );
 
                 $objElements = new Elements ($_SESSION['selectedRequest'], $id);
-                //$objStep->complete($objElements, $arrStepData);
 
                 if ( !isset ($objProject->object['audit_data']['elements'][$id]['steps'][$step]) &&
                         $step > $currentStatus )
@@ -533,10 +519,6 @@ class TasksController extends BaseController
                     $arrRequest[$workflow]['steps'][$step] = $arrStepData;
 
                     $objStep->complete ($objElements, $arrStepData);
-                }
-                else
-                {
-                    
                 }
 
                 if ( isset ($objProjects->object['elements'][$id][$workflow]['steps'][$step]['claimed']) )
@@ -547,13 +529,10 @@ class TasksController extends BaseController
             }
             else
             {
-                //if ( isset ($arrWorkflowData[0]['first_step']) && $arrWorkflowData[0]['first_step'] != 1 )
-                //{
                 $showClaimed = true;
                 $this->view->assignedTo = $objProject->object['audit_data']['elements'][$id]['steps'][$step]['claimed'];
 
                 $this->view->previousStepName = $arrWorkflowData['step_name'];
-                //}
             }
         }
 
@@ -575,7 +554,6 @@ class TasksController extends BaseController
             }
         }
 
-        $this->view->summary = $this->buildSummaryAction ($workflow, $id);
         if ( isset ($objProject->object['audit_data']['elements'][$id]['steps'][$stepFrom]['claimed']) )
         {
             $this->view->assignedTo = $objProject->object['audit_data']['elements'][$id]['steps'][$stepFrom]['claimed'];
@@ -697,23 +675,10 @@ class TasksController extends BaseController
         if ( $blCompletedStep !== true )
         {
 
-            $objFprmBuilder = new FormBuilder ("BaseData");
-
-            $arrFields = $objStep->getFields ();
-
-            $this->view->showButton = false;
-
-            $objForm = new Form ($currentStepId);
-            $arrForm = $objForm->getFields ();
-            $arrDocs = $objForm->getInputDocuments ();
-            $html = $objFprmBuilder->buildForm ($arrForm, $arrDocs);
-
-            $html .= '<button style="display: none;" type="button" class="btn btn-primary pull-right" id="Resubmit">Resubmit</button>';
-            $html .= "</form>";
-
-            //if($step == 200 && $workflow == 120) {
-            $html .= '<a refno="' . $id . '" class="pull-right generateBarcode">Print Barcode</a>';
-            //}
+           /**************** HTML FORM HERE *******************/
+            $html = '';
+            $objForm = new Form();
+            $html = $objForm->buildFormForStep($objStep, $_SESSION['selectedRequest'], $id);
 
             $this->view->html = $html;
 
@@ -727,95 +692,5 @@ class TasksController extends BaseController
 
         $this->view->partial ("tasks/getStepContent");
         return;
-    }
-
-    public function buildSummaryAction ($workflow, $id)
-    {
-        $this->view->disable ();
-        $objElement = new Elements ($_SESSION['selectedRequest'], $id);
-
-        $objWorkflow = new Workflow ($workflow, null);
-        $objStep = $objWorkflow->getNextStep ();
-
-        $arrFields = $objStep->getFields ();
-
-        $objFprmBuilder = new FormBuilder ("BaseData");
-
-        foreach ($arrFields as $arrField) {
-
-            if ( $arrField->getFieldId () != "file2" )
-            {
-                $value = isset ($objElement->arrElement[$arrField->getFieldId ()]) ? $objElement->arrElement[$arrField->getFieldId ()] : '';
-
-                $objFprmBuilder->addElement (array("type" => $arrField->getFieldType (), "label" => $arrField->getLabel (), "name" => $arrField->getFieldName (), "id" => $arrField->getFieldId (), "value" => $value, "is_disabled" => 1));
-            }
-        }
-
-        $html = $objFprmBuilder->render ();
-
-        $arrFiles = array();
-        $arrFiles2 = array();
-
-        if ( isset ($objElement->arrElement['file2']) )
-        {
-            $arrFiles2 = explode (",", $objElement->arrElement['file2']);
-        }
-
-        if ( isset ($objElement->arrElement['rejectionReason']) )
-        {
-            $rejectionReason = $objElement->arrElement['rejectionReason'];
-        }
-
-        if ( isset ($objElement->arrElement['file2']) )
-        {
-            $arrFiles = explode (",", $objElement->arrElement['file2']);
-        }
-
-        $arrFiles = array_merge ($arrFiles, $arrFiles2);
-
-        if ( isset ($rejectionReason) && !empty ($rejectionReason) )
-        {
-            $html .= '<div class="form-group">
-                <label class="col-lg-2 control-label">Reason For Rejection</label>
-                <div class="col-lg-10">
-           <textarea class="form-control">' . $rejectionReason . '</textarea>
-        </div>';
-        }
-
-        $objAttachments = new Attachments();
-
-        if ( isset ($arrFiles) )
-        {
-            $html .= '<div class="col-lg-12 pull-left">';
-            foreach ($arrFiles as $file) {
-                $objAttachments->setId ($file);
-                $arrAttachment = $objAttachments->getAttachment ();
-
-                if ( !empty ($arrAttachment) )
-                {
-
-                    foreach ($arrAttachment as $attachment) {
-
-                        $html .= '<div class="file-box">
-                                        <div class="file">
-                                            <a href="/attachments/download/' . $attachment['id'] . '">
-                                                <div class="icon">
-                                                    <i class="fa fa-file"></i>
-                                                </div>
-                                                <div class="file-name">
-                                                   ' . $attachment['filename'] . '
-                                                    <br>
-                                                    <small>Added:' . $attachment['uploaded_by'] . ' <br> ' . date ("M d, Y", strtotime ($attachment["date_uploaded"])) . '</small>
-                                                </div>
-                                            </a>
-                                        </div>
-                                    </div>';
-                    }
-                }
-            }
-            $html .= '</div>';
-        }
-
-        return $html;
     }
 }
