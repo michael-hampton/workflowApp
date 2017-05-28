@@ -16,35 +16,30 @@ class IndexController extends BaseController
 
         $objWorkflow = new Workflow (null, $objSave);
 
-        $arrWorkflow = $objWorkflow->getProcess ();
+        $objStep = $objWorkflow->getNextStep ();
 
-        if ( isset ($arrWorkflow[0]['parent_id']) && is_numeric ($arrWorkflow[0]['parent_id']) )
+        echo $objStep->getStepId ();
+        echo "Yes";
+
+        $this->view->steps = $objWorkflow->getStepsForWorkflow ();
+
+        if ( !empty ($objStep) && is_numeric ($objStep->getStepId ()) )
         {
-            $objWorkflow = new Workflow ($arrWorkflow[0]['parent_id']);
-            $objStep = $objWorkflow->getNextStep ();
-            $this->view->steps = $objWorkflow->getStepsForWorkflow ();
-
-            if ( !empty ($objStep) && is_numeric ($objStep->getStepId ()) )
-            {
-                $this->view->statusId = $objStep->getStepId ();
-            }
-            
-            $objSave = new Save($projectId);
-            
-            $objForm = new Form();
-            $html = $objForm->buildFormForStep($objStep, $projectId);
-
-            $this->view->html = $html;
-            $this->view->blComplete = false;
+            $this->view->statusId = $objStep->getStepId ();
         }
+
+        $objSave = new Save ($projectId);
+
+        $objForm = new Form();
+        $html = $objForm->buildFormForStep ($objStep, $projectId);
+
+        $this->view->html = $html;
+        $this->view->blComplete = false;
     }
 
     public function checkToMove ()
     {
         $objSave = new Save ($_SESSION['selectedRequest']);
-
-        echo "<pre>";
-        print_r ($objSave->object['audit_data']['elements']);
 
         if ( isset ($objSave->object['audit_data']) )
         {

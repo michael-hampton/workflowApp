@@ -1,17 +1,18 @@
 
 <?php
+
 function buildCounters ($arrCounters, $strType = 'DEFAULT')
 {
     $arrColours = array("text-navy", "text-danger", "text-primary", "text-info", "text-warning", "text-primary", "text-info", "text-warning", "text-warning", "text-primary", "text-info", "text-warning");
     $html = '';
     foreach ($arrCounters as $key => $arrCounter):
-        
+
 
         if ( $arrCounter['item'] == "CASES_INBOX" && $strType == "CASES_INBOX" )
         {
             return $arrCounter['count'];
         }
-        elseif ( $arrCounter['item'] == "CASES_DRAFT" && $strType == "CASES_DRAFT"  )
+        elseif ( $arrCounter['item'] == "CASES_DRAFT" && $strType == "CASES_DRAFT" )
         {
             return $arrCounter['count'];
         }
@@ -20,8 +21,8 @@ function buildCounters ($arrCounters, $strType = 'DEFAULT')
             $html .= '<li><a list-type="' . $arrCounter['item'] . '" href="#"> <i class="fa fa-circle ' . $arrColours[$key] . '"></i> ' . $arrCounter['item'] . " (" . $arrCounter['count'] . ") " . '</a></li>';
         }
 
-    endforeach; 
-    
+    endforeach;
+
     return $html;
 }
 ?>
@@ -52,7 +53,7 @@ function buildCounters ($arrCounters, $strType = 'DEFAULT')
 
                         <h5>Categories</h5>
                         <ul class="category-list" style="padding: 0">
-                            <?= buildCounters ($arrCounters); ?>
+<?= buildCounters ($arrCounters); ?>
 
 
                         </ul>
@@ -116,26 +117,29 @@ function buildCounters ($arrCounters, $strType = 'DEFAULT')
 
                     <tbody>
 
-<?php
-foreach ($arrNotifications as $key => $arrNotification):
+                        <?php
+                        foreach ($arrNotifications as $key => $arrNotification):
 
-    $class = $arrNotification['notifications']->getHasRead () == 0 ? 'unread' : 'read';
-    ?>
+                            $class = $arrNotification['notifications']->getHasRead () == 0 ? 'unread' : 'read';
 
-                            <tr class="<?= $class ?> mailItem">
-                                <td id="<?= $arrNotification['notifications']->getId () ?>" class="check-mail">
-                                    <input type="checkbox" class="i-checks">
-                                </td>
-                                <td class="mail-subject"><a href="mail_detail.html"><?= $arrNotifications[$key]['project']->getName () ?></a></td>
-                                <td class="mail-ontact"><a href="mail_detail.html"><?= $arrNotification['notifications']->getSubject () ?></a></td>
-                                <td class=""><?= $arrNotification['project']->getCurrent_step () ?></td>
+                            if ( is_object ($arrNotifications[$key]['project']) ):
+                                ?>
 
-                                <td class="text-right mail-date"><?= $arrNotification['notifications']->getDateSent () ?></td>
-                            </tr>
+                                <tr class="<?= $class ?> mailItem">
+                                    <td id="<?= $arrNotification['notifications']->getId () ?>" class="check-mail">
+                                        <input type="checkbox" class="i-checks">
+                                    </td>
+                                    <td class="mail-subject"><a href="mail_detail.html"><?= $arrNotifications[$key]['project']->getName () ?></a></td>
+                                    <td class="mail-ontact"><a href="mail_detail.html"><?= $arrNotification['notifications']->getSubject () ?></a></td>
+                                    <td class=""><?= $arrNotification['project']->getCurrent_step () ?></td>
 
-    <?php
-endforeach;
-?>
+                                    <td class="text-right mail-date"><?= $arrNotification['notifications']->getDateSent () ?></td>
+                                </tr>
+
+                                <?php
+                            endif;
+                        endforeach;
+                        ?>
 
                     </tbody>
                 </table>

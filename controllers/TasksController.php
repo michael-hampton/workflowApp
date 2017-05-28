@@ -185,6 +185,7 @@ class TasksController extends BaseController
                         $arrSteps[$workflowKey][$stepKey]['first_step'] = $arrStep['first_step'];
                         $arrSteps[$workflowKey][$stepKey]['next_step'] = $arrStep['step_to'];
                         $arrSteps[$workflowKey][$stepKey]['id'] = $arrStep['id'];
+                        $arrSteps[$workflowKey][$stepKey]['order_id'] = $arrStep['order_id'];
 
                         if ( isset ($workflow['status']) && in_array ($workflow['status'], $this->completeStatuses) )
                         {
@@ -259,8 +260,9 @@ class TasksController extends BaseController
 
         if ( isset ($_FILES['fileUpload']) )
         {
-           $objCases = new Cases();
-           $arrFiles = $objCases->uploadCaseFiles ($_FILES, $_SESSION['selectedRequest'], $objStep);
+            $objCases = new Cases();
+            $arrFiles = $objCases->uploadCaseFiles ($_FILES, $_SESSION['selectedRequest'], $objStep, $_POST['document_type']
+            );
         }
 
         $arrStepData['claimed'] = $_SESSION["user"]["username"];
@@ -358,7 +360,7 @@ class TasksController extends BaseController
 
         $objStepPermissions = new StepPermissions ($step);
         $blHasPermission = $objStepPermissions->validateUserPermissions ($objUsersArr[0]);
-         $this->view->canSave = false;
+        $this->view->canSave = false;
 
         if ( !$blHasPermission )
         {
@@ -608,7 +610,7 @@ class TasksController extends BaseController
 
         if ( $status == "REJECTED" )
         {
-            
+
             if ( $workflow == 7 )
             {
 
@@ -675,10 +677,10 @@ class TasksController extends BaseController
         if ( $blCompletedStep !== true )
         {
 
-           /**************** HTML FORM HERE *******************/
+            /*             * ************** HTML FORM HERE ****************** */
             $html = '';
             $objForm = new Form();
-            $html = $objForm->buildFormForStep($objStep, $_SESSION['selectedRequest'], $id);
+            $html = $objForm->buildFormForStep ($objStep, $_SESSION['selectedRequest'], $id);
 
             $this->view->html = $html;
 
@@ -693,4 +695,5 @@ class TasksController extends BaseController
         $this->view->partial ("tasks/getStepContent");
         return;
     }
+
 }
