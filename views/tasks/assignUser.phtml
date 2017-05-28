@@ -16,7 +16,6 @@ else
 <center>
     <i style="font-size: 72px; color : #ed5565" class=" fa fa-gears"></i>
 
-
     <div class="row">
         <p>
 
@@ -32,13 +31,13 @@ else
             <center>
 
                 <select id="assignusers" class="form-control assignusers" name="form[assignusers]" style="width : 250px;">
-<?php foreach ($users as $usersKey => $usersValues): ?>
-                        <option value="<?= $usersValues["username"] ?> " style="
+<?php foreach ($users as $usersKey => $objUser): ?>
+                        <option value="<?= $objUser->getUsername() ?> " style="
                                 background-repeat: no-repeat;
                                 background-size: 30px auto;
                                 padding: 10px 0 10px 40px;
-                                background-image : url('http://tes-sso.kondor.dev/v2/public/images/users/<?= $usersValues["username"] ?>.jpg')" >
-    <?= $usersValues["username"] ?>
+                                background-image : url('http://tes-sso.kondor.dev/v2/public/images/users/<?= $objUser->getUsername() ?>.jpg')" >
+    <?= $objUser->getUsername() ?>
                         </option>
                             <?php endforeach; ?>
                 </select><br>

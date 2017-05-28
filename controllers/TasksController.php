@@ -467,9 +467,12 @@ class TasksController extends BaseController
             }
             else
             {
+                $objUsers = new UsersFactory();
+                $this->view->users = $objUsers->getUsers();
                 //it was not yet
                 //$this->view->setRenderLevel(View::LEVEL_ACTION_VIEW);
                 //$this->view->resource_allocator = $this->hasPermission(RESOURCE_ALLOCATOR);
+                
                 $this->view->resource_allocator = true;
                 $status = "ASSIGN";
                 $this->view->requiredRole = $arrConditions["permissionId"];
@@ -571,6 +574,7 @@ class TasksController extends BaseController
             else
             {
                 $this->view->partial ("tasks/completeMessage");
+                die;
                 return true;
             }
 
@@ -579,11 +583,13 @@ class TasksController extends BaseController
         elseif ( $status == "CLAIM" )
         {
             $this->view->partial ("tasks/claimStep");
+            die;
             return;
         }
         elseif ( $status == "ASSIGN" )
         {
             $this->view->partial ("tasks/assignUser");
+            die;
             return;
         }
 
@@ -633,6 +639,7 @@ class TasksController extends BaseController
             elseif ( $blCompletedStep === false )
             {
                 $this->view->partial ("tasks/rejectionOverride");
+                die;
                 return;
             }
         }
@@ -646,20 +653,24 @@ class TasksController extends BaseController
             );
 
             $this->view->partial ("tasks/rejected");
+            die;
         }
         elseif ( $status == "HELD" )
         {
             $this->view->held = true;
             $this->view->partial ("tasks/rejectionOverride");
+            die;
         }
         elseif ( $status == "HOLD" )
         {
             $this->view->partial ("tasks/hold");
+            die;
             return;
         }
         elseif ( $canReject === true && $blCompletedStep === false )
         {
             $this->view->partial ("tasks/manualRejection");
+            die;
             return;
         }
         elseif ( $showClaimed === true && empty ($validate['validation']) )
