@@ -19,14 +19,14 @@
         foreach ($attachmnets as $attachmentKey => $attachment) :
             echo '<div class="file-box">
                                         <div class="file">
-                                            <a href="' . $attachment['download_path'] . $attachment['filename'] . '">
+                                            <a href="' . $attachment->getDownloadPath() . $attachment->getPrfFielname() . '">
                                                 <div class="icon">
                                                     <i class="fa fa-file"></i>
                                                 </div>
                                                 <div class="file-name">
-                                                   ' . $attachment['filename'] . '
+                                                   ' . $attachment->getPrfFielname() . '
                                                     <br>
-                                                    <small>Added:' . $attachment['uploaded_by'] . ' <br> ' . date ("M d, Y", strtotime ($attachment["date_uploaded"])) . '</small>
+                                                    <small>Added:' . $attachment->getUsrUid() . ' <br> ' . date ("M d, Y", strtotime ($attachment->getPrfCreateDate())) . '</small>
                                                 </div>
                                             </a>
                                         </div>

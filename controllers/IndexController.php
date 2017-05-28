@@ -16,82 +16,30 @@ class IndexController extends BaseController
 
         $objWorkflow = new Workflow (null, $objSave);
 
-        $this->view->steps = $objWorkflow->getStepsForWorkflow ();
         $objStep = $objWorkflow->getNextStep ();
+
+        echo $objStep->getStepId ();
+        echo "Yes";
+
+        $this->view->steps = $objWorkflow->getStepsForWorkflow ();
 
         if ( !empty ($objStep) && is_numeric ($objStep->getStepId ()) )
         {
             $this->view->statusId = $objStep->getStepId ();
         }
 
-        $arrFields = $objStep->getFields ();
+        $objSave = new Save ($projectId);
 
-        $objFprmBuilder = new FormBuilder ("channelForm");
-
-        $arrPriorities = $objSave->getPriorities ();
-
-        $arrOptions = array();
-
-        $intCount = 0;
-        foreach ($arrPriorities as $arrPriority) {
-            $arrOptions[$arrPriority['id']] = $arrPriority['name'];
-
-            $intCount++;
-        }
-
-        foreach ($arrFields as $arrField) {
-
-            $value = isset ($objSave->object['step_data']['job'][$arrField->getFieldId ()]) ? $objSave->object['step_data']['job'][$arrField->getFieldId ()] : '';
-
-            if ( $arrField->getFieldId () == "priority" )
-            {
-                $objFprmBuilder->addElement (array("type" => $arrField->getFieldType (), "label" => $arrField->getLabel (), "name" => $arrField->getFieldName (), "id" => $arrField->getFieldId (), "options" => json_encode ($arrOptions), "is_disabled" => 1, "value" => $value));
-            }
-            else
-            {
-                $objFprmBuilder->addElement (array("type" => $arrField->getFieldType (), "label" => $arrField->getLabel (), "name" => $arrField->getFieldName (), "id" => $arrField->getFieldId (), "is_disabled" => 1, "value" => $value));
-            }
-        }
-
-        $html = $objFprmBuilder->render ();
-
-        if ( isset ($objProjects->object['job']['rejection_reason']) )
-        {
-            $html .= '<div class="form-group">
-                <label class="col-lg-2 control-label">Reason For Rejection</label>
-                
-               <div class="col-lg-10">
-                    <textarea disabled="disabled" class="form-control">' . $objProjects->object['job']['rejection_reason'] . '</textarea>
-                </div>
-            </div>';
-        }
+        $objForm = new Form();
+        $html = $objForm->buildFormForStep ($objStep, $projectId);
 
         $this->view->html = $html;
-
-        $this->view->blComplete = $this->checkToMove ();
-
-        if ( isset ($objSave->object['step_data']['job']['completed_by']) )
-        {
-            $this->view->blComplete = false;
-            $this->view->statusId = 9;
-        }
-        elseif ( isset ($objSave->object['step_data']['job']['rejected_by']) )
-        {
-            $this->view->blComplete = false;
-            $this->view->statusId = 9;
-        }
-
-
-        $this->view->resource_allocator = true;
-        $this->view->inDepartment = true;
+        $this->view->blComplete = false;
     }
 
     public function checkToMove ()
     {
         $objSave = new Save ($_SESSION['selectedRequest']);
-
-        echo "<pre>";
-        print_r ($objSave->object['audit_data']['elements']);
 
         if ( isset ($objSave->object['audit_data']) )
         {
@@ -237,7 +185,6 @@ class IndexController extends BaseController
             $statusId = 4;
             $this->view->blComplete = false;
         }
-
     }
 
 }

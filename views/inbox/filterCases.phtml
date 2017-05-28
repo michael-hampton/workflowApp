@@ -27,14 +27,18 @@
                             </thead>
 
                             <tbody>
-                                <?php foreach ($arrLists['data'] as $objCase): ?>
-                                <tr class="caseRow" projectid="<?= $objCase->getParentId () ?>">
-                                        <td><a data-toggle="tab" href="#contact-1" class="client-link"><?= $objCase->getCurrent_user () ?></a></td>
-                                        <td> <?= $objCase->getName () ?></td>
-                                        <td> <?= $objCase->getCurrent_step () ?></td>
-                                         <td> <?= $objCase->getParentId () ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
+                                <?php 
+                                if(!empty($arrLists['data'])):
+                                    foreach ($arrLists['data'] as $objCase): ?>
+                                    <tr class="caseRow" projectid="<?= $objCase->getParentId () ?>">
+                                            <td><a data-toggle="tab" href="#contact-1" class="client-link"><?= $objCase->getCurrent_user () ?></a></td>
+                                            <td> <?= $objCase->getName () ?></td>
+                                            <td> <?= $objCase->getCurrent_step () ?></td>
+                                             <td> <?= $objCase->getParentId () ?></td>
+                                        </tr>
+                                    <?php endforeach;
+                                    endif; 
+                                    ?>
                             </tbody>
                         </table>
                     </div>

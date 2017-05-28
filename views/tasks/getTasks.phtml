@@ -189,7 +189,7 @@ $blComplete = false;
                                             $completed = '';
 
                                             foreach ($arrSteps[$workflowId] as $arrStep) {
-
+                                                
                                                 $conditions = json_decode ($arrStep['conditions'], true);
 
                                                 if ( $intCount == 0 && empty ($arrWorkflow['data']['currentStep']) )
@@ -204,12 +204,15 @@ $blComplete = false;
                                                 if ( $arrStep['step_id'] == $arrWorkflow['data']['currentStep'] )
                                                 {
                                                     $class = 'selected';
+                                                    $currentOrderId = $arrStep['order_id'];
                                                 }
                                                 
                                                 if ( isset ($conditions['autoAssign']) && $conditions['autoAssign'] == "Yes" && $hasPermission === true )
                                                 {
+                              
                                                     if ( $arrStep['step_id'] == $arrWorkflow['data']['nextStatus'] )
                                                     {
+                                                        echo "Yes";
                                                         $class = " autoAssign";
                                                     }
                                                     else
@@ -222,13 +225,14 @@ $blComplete = false;
                                                 }
                                                 else
                                                 {
+                                                   
                                                     if ( $arrStep['step_id'] != $arrWorkflow['data']['currentStep'] )
                                                     {
                                                         $class = 'disabledClass';
                                                     }
                                                 }
 
-                                                if ( $arrStep['step_id'] < $arrWorkflow['data']['currentStep'] )
+                                                if ( $arrStep['order_id'] < $currentOrderId )
                                                 {
                                                     $class = ' older-event';
                                                 }
