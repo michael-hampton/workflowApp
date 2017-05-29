@@ -24,14 +24,8 @@ class TasksController extends BaseController
         $this->view->disable ();
         $objElements = new Elements ($_SESSION['selectedRequest'], $id);
 
-        $arrStepData = array(
-            'claimed' => $_SESSION["user"]["username"],
-            "dateCompleted" => date ("Y-m-d H:i;s"),
-            "status" => "CLAIMED"
-        );
-
-        $objStep = new WorkflowStep (null, $objElements);
-        $objStep->assignUserToStep ($objElements, $arrStepData);
+        $objCases = new Cases();
+        $objCases->assignUsers ($objElements);
     }
 
     public function moveOnAction ($workflow, $id)
@@ -39,14 +33,8 @@ class TasksController extends BaseController
         $this->view->disable ();
         $objElement = new Elements ($_SESSION['selectedRequest'], $id);
 
-        $arrStepData = array(
-            'claimed' => $_SESSION["user"]["username"],
-            "dateCompleted" => date ("Y-m-d H:i;s"),
-            "status" => "COMPLETE"
-        );
-
-        $objSteps = new WorkflowStep (null, $objElement);
-        $objSteps->complete ($objElement, $arrStepData);
+        $objCases = new Cases();
+        $objCases->updateStatus ($objElement, "COMPLETE");
     }
 
     public function AssignAction ($user, $workflow, $id)
@@ -54,18 +42,8 @@ class TasksController extends BaseController
         $this->view->disable ();
         $objElements = new Elements ($_SESSION['selectedRequest'], $id);
 
-        $arrStepData = array(
-            'claimed' => $user,
-            "dateCompleted" => date ("Y-m-d H:i;s"),
-            "status" => "CLAIMED"
-        );
-
-        $objStep = new WorkflowStep (null, $objElements);
-        $objStep->assignUserToStep ($objElements, $arrStepData);
-
-        //if($_SESSION["user"]["username"] == $user) {
-        //$objStep->complete($objElements, $arrStepData);
-        //}
+        $objCases = new Cases();
+        $objCases->assignUsers ($objElements);
     }
 
     public function giveAChanceAction ($projectId, $step)
@@ -79,47 +57,30 @@ class TasksController extends BaseController
     {
         $this->view->disable ();
 
-        $arrStepData = array(
-            'claimed' => $_SESSION["user"]["username"],
-            "dateCompleted" => date ("Y-m-d H:i;s"),
-            "status" => "ABANDONED",
-        );
-
         $objElements = new Elements ($_SESSION['selectedRequest'], $id);
 
-        $objStep = new WorkflowStep (null, $objElements);
-        $objStep->save ($objElements, $arrStepData);
+        $objCases = new Cases();
+        $objCases->updateStatus ($objElements, "ABANDONED");
     }
 
     public function holdAction ($workflow, $id)
     {
         $this->view->disable ();
 
-        $arrStepData = array(
-            'claimed' => $_SESSION["user"]["username"],
-            "dateCompleted" => date ("Y-m-d H:i;s"),
-            "status" => "HELD",
-        );
-
+       
         $objElements = new Elements ($_SESSION['selectedRequest'], $id);
-        $objStep = new WorkflowStep (null, $objElements);
-        $objStep->save ($objElements, $arrStepData);
+        $objCases = new Cases();
+        $objCases->updateStatus ($objElements, "HELD");
     }
 
     public function rejectAction ($workflow, $id)
     {
         $this->view->disable ();
 
-        $arrStepData = array(
-            'claimed' => $_SESSION["user"]["username"],
-            "dateCompleted" => date ("Y-m-d H:i;s"),
-            "status" => "REJECT",
-            "rejectionReason" => $_POST['reason']
-        );
 
         $objElement = new Elements ($_SESSION['selectedRequest'], $id);
-        $objStep = new WorkflowStep (null, $objElement);
-        $objStep->save ($objElement, $arrStepData);
+        $objCases = new Cases();
+        $objCases->updateStatus ($objElement, "REJECT", $_POST['reason']);
     }
 
     public function getTasksAction ($projectId)
@@ -267,8 +228,8 @@ class TasksController extends BaseController
 
         if ( isset ($_FILES['fileUpload']) )
         {
-           $objCases = new Cases();
-           $arrFiles = $objCases->uploadCaseFiles ($_FILES, $_SESSION['selectedRequest'], $objStep);
+            $objCases = new Cases();
+            $arrFiles = $objCases->uploadCaseFiles ($_FILES, $_SESSION['selectedRequest'], $objStep);
         }
 
         $arrStepData['claimed'] = $_SESSION["user"]["username"];
@@ -367,7 +328,7 @@ class TasksController extends BaseController
 
         $objStepPermissions = new StepPermissions ($step);
         $blHasPermission = $objStepPermissions->validateUserPermissions ($objUsersArr[0]);
-         $this->view->canSave = false;
+        $this->view->canSave = false;
 
         if ( !$blHasPermission )
         {
@@ -630,7 +591,7 @@ class TasksController extends BaseController
 
         if ( $status == "REJECTED" )
         {
-            
+
             if ( $workflow == 7 )
             {
 
@@ -818,4 +779,5 @@ class TasksController extends BaseController
 
         return $html;
     }
+
 }
