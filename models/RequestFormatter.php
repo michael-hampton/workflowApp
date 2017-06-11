@@ -315,16 +315,19 @@ class RequestFormatter extends BaseModel
 
         /*         * ******************* Teams ************************************** */
         $intCount = 0;
+        $deptId = null;
 
-        $objWorkflowCollectionFactory = new WorkflowCollectionFactory();
-        $result = $objWorkflowCollectionFactory->getCategory ($arrData['requestType']);
-        $deptId = $result->getDeptId ();
+        if ( isset ($arrData['requestType']) )
+        {
+            $objWorkflowCollectionFactory = new WorkflowCollectionFactory();
+            $result = $objWorkflowCollectionFactory->getCategory ($arrData['requestType']);
+            $deptId = $result->getDeptId ();
+        }
 
         $arrKanbanUsers['users'] = $this->buildUserList ($arrData, $deptId);
 
         if ( $deptId !== null )
         {
-
             foreach ($this->arrTeams as $teamKey => $arrTeam) {
                 if ( $arrTeam['dept_id'] != $deptId )
                 {
@@ -336,7 +339,6 @@ class RequestFormatter extends BaseModel
         $arrKanbanUsers['teams'] = $this->arrTeams;
 
         foreach ($this->arrProjects as $key => $arrProject) {
-
 
             $intSkipCount = 0;
 
@@ -352,6 +354,7 @@ class RequestFormatter extends BaseModel
             /*             * ************************ Assigned Users ************************** */
             $arrUserIds = array();
             $oCase = new Cases();
+
 
             if ( isset ($data['scheduler']['backlogs']) && !empty ($data['scheduler']['backlogs']) )
             {
@@ -436,7 +439,7 @@ class RequestFormatter extends BaseModel
             if ( $intSkipCount == 0 )
             {
                 $arrKanbanUsers['id'] = $arrProject['id'];
-                $arrKanbanUsers['title'] = $data['scheduler']['name'];
+                $arrKanbanUsers['title'] = $data['job']['name'];
 
                 /*                 * ***************** Priorities ************************************ */
                 $arrKanbanUsers['priority']['id'] = $data['scheduler']['priority'];
@@ -447,18 +450,27 @@ class RequestFormatter extends BaseModel
                 $arrKanbanUsers['body'] = $data['job']['description'];
 
                 /*                 * ********************** Comments ************************** */
-                $arrKanbanUsers['comments'][0]['body'] = "Test Comment";
-                $arrKanbanUsers['comments'][0]['datetime'] = date ("Y-m-d H:i:s");
-                $arrKanbanUsers['comments'][0]['user'] = "uan.hampton";
+                $arrComments = $oCase->getCaseNotes ($arrProject['id'], $_SESSION['user']['usrid']);
 
-                $arrKanbanUsers['tags'][0] = array("test tag");
+                $commentCount = 0;
+                foreach ($arrComments['data'] as $arrComment) {
+
+                    $arrKanbanUsers['comments'][$commentCount]['body'] = $arrComment['note_content'];
+                    $arrKanbanUsers['comments'][$commentCount]['datetime'] = $arrComment['note_date'];
+                    $arrKanbanUsers['comments'][$commentCount]['user'] = $arrComment['usr_uid'];
+
+                    $commentCount++;
+                }
+
+
+                //$arrKanbanUsers['tags'][0] = array("test tag");
                 $arrKanbanUsers['owner'] = $data['scheduler']['added_by'];
 
                 /*                 * *************** Columns ************************************* */
                 $count = isset ($arrKanbanUsers['column_' . $status]) ? count ($arrKanbanUsers['column_' . $status]) + 1 : 0;
                 $arrKanbanUsers['column_' . $status][$count]['type'] = 1;
                 $arrKanbanUsers['column_' . $status][$count]['id'] = $arrProject['id'];
-                $arrKanbanUsers['column_' . $status][$count]['title'] = $data['scheduler']['name'];
+                $arrKanbanUsers['column_' . $status][$count]['title'] = $data['job']['name'];
                 $arrKanbanUsers['column_' . $status][$count]['priority']['id'] = $data['scheduler']['priority'];
                 $arrKanbanUsers['column_' . $status][$count]['priority']['name'] = $this->arrPriorities[$data['scheduler']['priority']]['name'];
                 $arrKanbanUsers['column_' . $status][$count]['priority']['label'] = $this->arrPriorities[$data['scheduler']['priority']]['label'];
@@ -485,7 +497,7 @@ class RequestFormatter extends BaseModel
                             $backlog['dateCompleted'] = $backlog['case']->getDateCompleted ();
 
                             $arrKanbanUsers['column_' . $status][$count]['backlogs'][$backlogCount]['id'] = $backlogId;
-                            $arrKanbanUsers['column_' . $status][$count]['backlogs'][$backlogCount]['title'] = "Test Mike";
+                            $arrKanbanUsers['column_' . $status][$count]['backlogs'][$backlogCount]['title'] = $backlog['case']->getName ();
                             $arrKanbanUsers['column_' . $status][$count]['backlogs'][$backlogCount]['status']['label'] = "label label-primary";
                             $arrKanbanUsers['column_' . $status][$count]['backlogs'][$backlogCount]['status']['status'] = strtoupper ($statusName);
 
