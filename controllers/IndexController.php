@@ -13,6 +13,7 @@ class IndexController extends BaseController
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
         $objSave = new Save ($_SESSION['selectedRequest']);
+        $objUser = (new UsersFactory())->getUser($_SESSION['user']['usrid']);
 
         $objWorkflow = new Workflow (null, $objSave);
 
@@ -31,7 +32,7 @@ class IndexController extends BaseController
         $objSave = new Save ($projectId);
 
         $objForm = new Form();
-        $html = $objForm->buildFormForStep ($objStep, $projectId);
+        $html = $objForm->buildFormForStep ($objStep, $objUser, $projectId);
 
         $this->view->html = $html;
         $this->view->blComplete = false;

@@ -25,19 +25,18 @@ else
             </h2>
             <br><br>
 <?= $message ?>
-            <?= $requiredRole ?>
             <br><br>
 
             <center>
 
                 <select id="assignusers" class="form-control assignusers" name="form[assignusers]" style="width : 250px;">
-<?php foreach ($users as $usersKey => $objUser): ?>
-                        <option value="<?= $objUser->getUsername() ?> " style="
+<?php foreach ($users['data'] as $usersKey => $user): ?>
+                        <option value="<?= $user['username'] ?> " style="
                                 background-repeat: no-repeat;
                                 background-size: 30px auto;
                                 padding: 10px 0 10px 40px;
-                                background-image : url('http://tes-sso.kondor.dev/v2/public/images/users/<?= $objUser->getUsername() ?>.jpg')" >
-    <?= $objUser->getUsername() ?>
+                                background-image : url('/FormBuilder/public/img/users/<?= $user['username'] ?>.jpg')" >
+    <?= $user['username'] ?>
                         </option>
                             <?php endforeach; ?>
                 </select><br>

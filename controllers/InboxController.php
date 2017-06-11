@@ -49,7 +49,7 @@ class InboxController extends BaseController
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
         $objLists = new Lists();
-        $this->view->arrCases = $objLists->loadList ($filter, array("userId" => $_SESSION['user']['usrid'], "page" => $page, "page_limit" => 10));
+        $this->view->arrCases = $objLists->loadList ($filter, array("userId" => $_SESSION['user']['usrid'], "page" => $page, "page_limit" => PRODUCTS_PAGE_LIMIT));
         $this->view->pagination = $this->getPagination ("projectsPage");
     }
 
@@ -255,7 +255,6 @@ class InboxController extends BaseController
         $this->view->disable ();
 
         $objCases = new Cases();
-
         $arrFiles = isset ($_FILES['fileUpload']) ? $_FILES : array();
 
         $objCases->addCase ($_POST['workflowid'], $_SESSION['user']['usrid'], $_POST, $arrFiles);

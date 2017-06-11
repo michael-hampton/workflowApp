@@ -67,7 +67,7 @@ class TasksController extends BaseController
     {
         $this->view->disable ();
 
-       
+
         $objElements = new Elements ($_SESSION['selectedRequest'], $id);
         $objCases = new Cases();
         $objCases->updateStatus ($objElements, "HELD");
@@ -221,10 +221,11 @@ class TasksController extends BaseController
 
         if ( isset ($_FILES['fileUpload']) )
         {
-            $objCases = new Cases();
-            $arrFiles = $objCases->uploadCaseFiles ($_FILES, $_SESSION['selectedRequest'], $objStep, $_POST['document_type']
-            );
+            $documentType = isset ($_POST['document_type']) ? $_POST['document_type'] : '';
 
+            $objCases = new Cases();
+            $arrFiles = $objCases->uploadCaseFiles ($_FILES, $_SESSION['selectedRequest'], $objStep, $documentType
+            );
         }
 
         $arrStepData['claimed'] = $_SESSION["user"]["username"];
@@ -237,7 +238,9 @@ class TasksController extends BaseController
             $_POST['form']['file2'] = implode (",", $arrFiles);
         }
 
-        $validation = $objStep->save ($objElement, $_POST['form']);
+        $objUser = (new UsersFactory)->getUser ($_SESSION['user']['usrid']);
+
+        $validation = $objStep->save ($objElement, $_POST['form'], $objUser);
 
         if ( $validation === false )
         {
@@ -248,7 +251,7 @@ class TasksController extends BaseController
 
         if ( $completeStep == 1 )
         {
-            $nextStep = $objStep->complete ($objElement, $arrStepData);
+            $nextStep = $objStep->complete ($objElement, $arrStepData, $objUser);
         }
 
         if ( is_numeric ($nextStep->getStepId ()) && $nextStep->getStepId () != 0 )
@@ -312,16 +315,15 @@ class TasksController extends BaseController
         $this->view->review = false;
         $blCompletedStep = false;
 
-        $objUsers = new UsersFactory ($_SESSION['user']['usrid']);
-        $objUsersArr = $objUsers->getUsers ();
+        $objUser = (new UsersFactory ())->getUser ($_SESSION['user']['usrid']);
 
-        if ( empty ($objUsersArr) )
+        if ( empty ($objUser) )
         {
             die ("BAD USER");
         }
 
         $objStepPermissions = new StepPermissions ($step);
-        $blHasPermission = $objStepPermissions->validateUserPermissions ($objUsersArr[0]);
+        $blHasPermission = $objStepPermissions->validateUserPermissions ($objUser);
         $this->view->canSave = false;
 
         if ( !$blHasPermission )
@@ -429,15 +431,21 @@ class TasksController extends BaseController
             }
             else
             {
-                $objUsers = new UsersFactory();
-                $this->view->users = $objUsers->getUsers();
-                //it was not yet
-                //$this->view->setRenderLevel(View::LEVEL_ACTION_VIEW);
-                //$this->view->resource_allocator = $this->hasPermission(RESOURCE_ALLOCATOR);
+                $objCases = new Cases();
+                $users = $objCases->getUsersToReassign ($_SESSION['selectedRequest'], $id, $objUser, $objStep);
+
+                $this->view->resource_allocator = false;
+
+                foreach ($users['data'] as $user) {
+                    if ( trim($user['username']) === trim($objUser->getUsername ()) )
+                    {
+                        $this->view->resource_allocator = true;
+                        break;
+                    }
+                }
                 
-                $this->view->resource_allocator = true;
+                $this->view->users = $users;
                 $status = "ASSIGN";
-                $this->view->requiredRole = $arrConditions["permissionId"];
             }
         }
 
@@ -485,7 +493,7 @@ class TasksController extends BaseController
                 {
                     $arrRequest[$workflow]['steps'][$step] = $arrStepData;
 
-                    $objStep->complete ($objElements, $arrStepData);
+                    $objStep->complete ($objElements, $arrStepData, $objUser);
                 }
 
                 if ( isset ($objProjects->object['elements'][$id][$workflow]['steps'][$step]['claimed']) )
@@ -653,7 +661,7 @@ class TasksController extends BaseController
             /*             * ************** HTML FORM HERE ****************** */
             $html = '';
             $objForm = new Form();
-            $html = $objForm->buildFormForStep ($objStep, $_SESSION['selectedRequest'], $id);
+            $html = $objForm->buildFormForStep ($objStep, $objUser, $_SESSION['selectedRequest'], $id);
 
             $this->view->html = $html;
 
@@ -668,4 +676,88 @@ class TasksController extends BaseController
         $this->view->partial ("tasks/getStepContent");
         return;
     }
+
+    public function cases_ShowOutputDocumentAction ()
+    {
+        $this->view->disable ();
+
+        $oAppDocument = new DocumentVersion();
+        $Fields = $oAppDocument->load ($_GET['a'], $_GET['v'], $_GET['a'], false);
+        $sAppDocUid = $Fields->getAppDocUid ();
+        $sDocUid = $Fields->getDocUid ();
+        $oOutputDocument = new OutputDocument();
+        $doc = $oOutputDocument->retrieveByPk ($sDocUid);
+        $download = $doc->getOutDocOpenType ();
+        $info = pathinfo ($Fields->getAppDocFilename ());
+
+        if ( !isset ($_GET['ext']) )
+        {
+
+            $ext = $info['extension'];
+        }
+        else
+        {
+
+            if ( $_GET['ext'] != '' )
+            {
+
+                $ext = $_GET['ext'];
+            }
+            else
+            {
+
+                $ext = $info['extension'];
+            }
+        }
+
+        $ver = (isset ($_GET['v']) && $_GET['v'] != '') ? '_' . $_GET['v'] : '';
+        $_SESSION['selectedRequest'] = 119;
+
+
+
+        if ( !$ver ) //This code is in the case the outputdocument won't be versioned
+            $ver = '_1';
+
+        $realPath = $_SERVER['DOCUMENT_ROOT'] . "/FormBuilder/public/uploads/OutputDocuments/" . $_SESSION['selectedRequest'] . "/" . $sDocUid . $ver . "." . $ext;
+        $realPath1 = $_SERVER['DOCUMENT_ROOT'] . '/FormBuilder/public/uploads/OutputDocuments/' . $info['basename'] . $ver . '.' . $ext;
+
+        $realPath2 = $_SERVER['DOCUMENT_ROOT'] . '/FormBuilder/public/uploads/OutputDocuments/' . $info['basename'] . '.' . $ext;
+
+        $sw_file_exists = false;
+
+        if ( file_exists ($realPath) )
+        {
+            $sw_file_exists = true;
+        }
+        elseif ( file_exists ($realPath1) )
+        {
+
+            $sw_file_exists = true;
+
+            $realPath = $realPath1;
+        }
+        elseif ( file_exists ($realPath2) )
+        {
+
+            $sw_file_exists = true;
+
+            $realPath = $realPath2;
+        }
+
+
+        if ( !$sw_file_exists )
+        {
+            $error_message = "'" . $info['basename'] . $ver . '.' . $ext . "' " . 'ID_ERROR_STREAMING_FILE';
+            echo $error_message;
+            return false;
+        }
+
+        $nameFile = $info['basename'] . $ver . '.' . $ext;
+
+        $objFileUpload = new FileUpload();
+        $objFileUpload->streamFile ($realPath, true, $nameFile);
+
+        die;
+    }
+
 }

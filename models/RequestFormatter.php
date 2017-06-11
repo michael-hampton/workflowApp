@@ -35,7 +35,7 @@ class RequestFormatter extends BaseModel
 
     public function getSteps ($requestId)
     {
-        return $this->_query("SELECT * from kanban_columns WHERE request_id = ?", [$requestId]);
+        return $this->_query ("SELECT * from kanban_columns WHERE request_id = ?", [$requestId]);
     }
 
     private function getStatuses ()
@@ -77,10 +77,10 @@ class RequestFormatter extends BaseModel
             $this->arrPriorities[$arrPriority['id']]['label'] = "label " . $arrPriority['style'];
         }
     }
-    
-    public function getRequestTypes()
+
+    public function getRequestTypes ()
     {
-        return $this->_query("SELECT  
+        return $this->_query ("SELECT  
                                     k.`request_id`, r.request_type 
                                 FROM workflow.request_types r
                                 INNER JOIN task_manager.kanban_columns k ON k.request_id = r.request_id
@@ -312,20 +312,13 @@ class RequestFormatter extends BaseModel
         $arrAllUsers = array();
         $arrUsedUsers = array();
         $deptId = null;
-        
+
         /*         * ******************* Teams ************************************** */
         $intCount = 0;
 
-
-        /*         * ********************** Users ************************ */
-        $intCount = 0;
-
-        if ( isset ($arrData['requestType']) && is_numeric ($arrData['requestType']) )
-        {
-            $result = $this->_select ("workflow.request_types", array(), array("request_id" => $arrData['requestType']));
-
-            $deptId = $result[0]['dept_id'];
-        }
+        $objWorkflowCollectionFactory = new WorkflowCollectionFactory();
+        $result = $objWorkflowCollectionFactory->getCategory ($arrData['requestType']);
+        $deptId = $result->getDeptId ();
 
         $arrKanbanUsers['users'] = $this->buildUserList ($arrData, $deptId);
 
@@ -358,20 +351,21 @@ class RequestFormatter extends BaseModel
 
             /*             * ************************ Assigned Users ************************** */
             $arrUserIds = array();
+            $oCase = new Cases();
 
             if ( isset ($data['scheduler']['backlogs']) && !empty ($data['scheduler']['backlogs']) )
             {
                 foreach ($data['scheduler']['backlogs'] as $backlogId => $backlog) {
-                    
-                    if(isset($arrAuditData['elements'][$backlogId]['steps'])) {
-                        foreach ($arrAuditData['elements'][$backlogId]['steps'] as $audit) {
-                            if(isset($audit['claimed'])) {
-                                $arrUserIds[] = $this->arrAllUsers[$audit['claimed']]['uid'];
-                            }
-                        }
+
+                    $participants = $oCase->getUsersParticipatedInCase ($arrProject['id']);
+
+                    foreach ($participants as $participant) {
+                        $arrUserIds[] = $this->arrAllUsers[$participant]['uid'];
                     }
                 }
             }
+
+            $arrCases = array();
 
             $arrUserIds[] = $this->arrAllUsers[$data['scheduler']['added_by']]['uid'];
 
@@ -416,33 +410,28 @@ class RequestFormatter extends BaseModel
                     {
                         $arrKanbanUsers['steps'] = $this->getSteps ($arrData['requestType']);
 
-                        foreach ($data['elements'] as $element) {
-                            foreach ($element as $workflow) {
-                                if ( isset ($workflow['current_step']) )
+                        foreach ($data['elements'] as $elementId => $element) {
+                            $objCaseData = $oCase->getCaseInfo ($arrProject['id'], $elementId);
+                            $data['scheduler']['backlogs'][$elementId]['case'] = $objCaseData;
+
+                            $arrCases[$arrProject['id'][$elementId]] = $objCaseData;
+
+                            if ( $objCaseData instanceof Elements )
+                            {
+                                $currentStep = $objCaseData->getCurrentStepId ();
+                                $requestId = $objCaseData->getRequestId ();
+
+                                if ( !is_numeric ($requestId) || trim ($requestId) == "" || $requestId != $arrData['requestType'] )
                                 {
-                                    $query = "SELECT w.request_id FROM status_mapping sm
-                                                INNER JOIN workflows w ON w.workflow_id = sm.workflow_id
-                                                WHERE sm.step_from = ?";
-                                    $arrParameters = array($workflow['current_step']);
-                                    $result = $this->_query ($query, $arrParameters);
-
-                                    $requestId = $result[0]['request_id'];
-
-                                    if ( $requestId != $arrData['requestType'] )
-                                    {
-                                        $intSkipCount++;
-                                    }
+                                    $intSkipCount++;
                                 }
                             }
+
+                            unset ($objCaseData);
                         }
-                    }
-                    else
-                    {
-                        //$intSkipCount++;
                     }
                 }
             }
-           
 
             if ( $intSkipCount == 0 )
             {
@@ -464,7 +453,7 @@ class RequestFormatter extends BaseModel
 
                 $arrKanbanUsers['tags'][0] = array("test tag");
                 $arrKanbanUsers['owner'] = $data['scheduler']['added_by'];
-                
+
                 /*                 * *************** Columns ************************************* */
                 $count = isset ($arrKanbanUsers['column_' . $status]) ? count ($arrKanbanUsers['column_' . $status]) + 1 : 0;
                 $arrKanbanUsers['column_' . $status][$count]['type'] = 1;
@@ -488,53 +477,42 @@ class RequestFormatter extends BaseModel
                 {
                     foreach ($data['scheduler']['backlogs'] as $backlogId => $backlog) {
 
-                        $backlogStatus = $arrWorkflowData['elements'][$backlogId]['current_step'];
-                        $arrStatus = $this->_query ("SELECT s.step_name FROM workflow.status_mapping sm
-                                                    INNER JOIN workflow.steps s ON s.step_id = sm.step_from
-                                                    WHERE sm.id = ?", [$backlogStatus]);
-                        $statusName = $arrStatus[0]['step_name'];
-                        
-                        $auditStatus = $this->_query("SELECT * FROM workflow.status_mapping 
-                                                        WHERE step_to = 
-                                                            (SELECT step_from FROM workflow.status_mapping WHERE id = ?)
-                                                            ", [$backlogStatus]);
-                        
-                        $auditStatus = $auditStatus[0]['id'];
-
-                        if ( isset ($arrAuditData['elements'][$backlogId]['steps'][$auditStatus]['claimed']) )
+                        if ( !empty ($backlog['case']) && $backlog['case'] instanceof Elements )
                         {
-                            $backlog['claimed'] = $arrAuditData['elements'][$backlogId]['steps'][$auditStatus]['claimed'];
-                            $backlog['dateCompleted'] = $arrAuditData['elements'][$backlogId]['steps'][$auditStatus]['dateCompleted'];
+                            $backlogStatus = $backlog['case']->getCurrentStepId ();
+                            $statusName = $backlog['case']->getCurrent_step ();
+                            $backlog['claimed'] = $backlog['case']->getCurrent_user ();
+                            $backlog['dateCompleted'] = $backlog['case']->getDateCompleted ();
+
+                            $arrKanbanUsers['column_' . $status][$count]['backlogs'][$backlogCount]['id'] = $backlogId;
+                            $arrKanbanUsers['column_' . $status][$count]['backlogs'][$backlogCount]['title'] = "Test Mike";
+                            $arrKanbanUsers['column_' . $status][$count]['backlogs'][$backlogCount]['status']['label'] = "label label-primary";
+                            $arrKanbanUsers['column_' . $status][$count]['backlogs'][$backlogCount]['status']['status'] = strtoupper ($statusName);
+
+                            if ( isset ($backlog['claimed']) )
+                            {
+                                $arrKanbanUsers['column_' . $status][$count]['backlogs'][$backlogCount]['users'][$userCount] = $this->arrAllUsers[$backlog['claimed']];
+                            }
+
+                            if ( isset ($backlog['claimed']) && !in_array ($backlog['claimed'], $arrUsedUsers) )
+                            {
+                                $arrKanbanUsers['column_' . $status][$count]['users'][$userCount] = $arrAllUsers[$backlog['claimed']];
+                            }
+
+                            $arrKanbanUsers['backlogs'][$backlogCount]['id'] = $backlogId;
+                            $arrKanbanUsers['backlogs'][$backlogCount]['Title'] = "test mike";
+                            $arrKanbanUsers['backlogs'][$backlogCount]['status'] = $status;
+
+                            $userCount++;
+
+
+                            $backlogCount++;
                         }
-   
-                        $arrKanbanUsers['column_' . $status][$count]['backlogs'][$backlogCount]['id'] = $backlogId;
-                        $arrKanbanUsers['column_' . $status][$count]['backlogs'][$backlogCount]['title'] = "Test Mike";
-                        $arrKanbanUsers['column_' . $status][$count]['backlogs'][$backlogCount]['status']['label'] = "label label-primary";
-                        $arrKanbanUsers['column_' . $status][$count]['backlogs'][$backlogCount]['status']['status'] = strtoupper ($statusName);
-                                
-                        if ( isset ($backlog['claimed']) )
-                        {
-                            $arrKanbanUsers['column_' . $status][$count]['backlogs'][$backlogCount]['users'][$userCount] = $this->arrAllUsers[$backlog['claimed']];
-                        }
-
-                        if ( isset ($backlog['claimed']) && !in_array ($backlog['claimed'], $arrUsedUsers) )
-                        {
-                            $arrKanbanUsers['column_' . $status][$count]['users'][$userCount] = $arrAllUsers[$backlog['claimed']];
-                        }
-
-                        $arrKanbanUsers['backlogs'][$backlogCount]['id'] = $backlogId;
-                        $arrKanbanUsers['backlogs'][$backlogCount]['Title'] = "test mike";
-                        $arrKanbanUsers['backlogs'][$backlogCount]['status'] = $status;
-
-                        $userCount++;
-
-
-                        $backlogCount++;
                     }
                 }
             }
         }
-        
+
         return $arrKanbanUsers;
     }
 
