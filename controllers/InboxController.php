@@ -12,25 +12,38 @@ class InboxController extends BaseController
 
     public function inboxAction ()
     {
-        $objNotifications = new NotificationsFactory();
+        $objNotifications = new \BusinessModel\NotificationsFactory();
+
+        if ( !$this->checkPermissions ("EASYFLOW_CASES") )
+        {
+            header ("Location: /FormBuilder/errors/error403");
+            die;
+        }
 
         $arrParameters = array("user" => $_SESSION['user']['user_email'], "status" => 1, "is_important" => 0);
 
         $this->view->arrNotifications = $objNotifications->getNotifications ($arrParameters);
 
-        $objLists = new Lists();
+        $objLists = new \BusinessModel\Lists();
         $objLists->loadList ("inbox", array("userId" => $_SESSION['user']['usrid']));
-        
-        $objUsers = new UsersFactory($_SESSION['user']['usrid']);
-        $arrUser = $objUsers->getUsers();
-        
+
+        $objUsers = new \BusinessModel\UsersFactory ($_SESSION['user']['usrid']);
+        $arrUser = $objUsers->getUsers ();
+
         $this->view->arrCounters = $objLists->getCounters ($arrUser[0]);
     }
 
     public function searchMessagesAction ($status, $page = 0, $strOrderBy = "ns.date_sent", $strOrderDir = "DESC")
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
-        $objNotifications = new NotificationsFactory();
+
+        if ( !$this->checkPermissions ("EASYFLOW_CASES") )
+        {
+            header ("Location: /FormBuilder/errors/error403");
+            die;
+        }
+
+        $objNotifications = new \BusinessModel\NotificationsFactory();
 
         $isImportant = $status == 8 ? 1 : 0;
 
@@ -48,7 +61,7 @@ class InboxController extends BaseController
     public function filterProjectsAction ($filter, $page)
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
-        $objLists = new Lists();
+        $objLists = new \BusinessModel\Lists();
         $this->view->arrCases = $objLists->loadList ($filter, array("userId" => $_SESSION['user']['usrid'], "page" => $page, "page_limit" => PRODUCTS_PAGE_LIMIT));
         $this->view->pagination = $this->getPagination ("projectsPage");
     }
@@ -84,7 +97,7 @@ class InboxController extends BaseController
     public function getMessageAction ($id)
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
-        $objNotifications = new NotificationsFactory();
+        $objNotifications = new \BusinessModel\NotificationsFactory();
         $arrParameters = array("user" => $_SESSION['user']['user_email'], "status" => null, "is_important" => 0, "has_read" => 0, "id" => $id);
 
         $this->view->arrNotifications = $objNotifications->getNotifications ($arrParameters);
@@ -236,8 +249,45 @@ class InboxController extends BaseController
     public function addCaseAction ($page = 0)
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
-        $objWorkflow = new WorkFlow();
-        $this->view->arrWorkflows = $objWorkflow->getAllProcesses ($page, PRODUCTS_PAGE_LIMIT);
+
+        if ( !$this->checkPermissions ("EASYFLOW_CASES") )
+        {
+            header ("Location: /FormBuilder/errors/error403");
+            die;
+        }
+
+        $arrWorkflows = (new Workflow())->getAllProcesses ($page, PRODUCTS_PAGE_LIMIT);
+
+        $workflowPermissions = (new \BusinessModel\ProcessPermission (null))->getAllProcessPermissions ();
+        $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
+
+        $teamId = $objUser->getTeam_id ();
+        $userId = $objUser->getUserId ();
+
+        foreach ($arrWorkflows as $key => $objWorkflow) {
+
+            $blHasPermission = false;
+
+            if ( isset ($workflowPermissions[$objWorkflow->getId ()]) )
+            {
+                if ( isset ($workflowPermissions[$objWorkflow->getId ()]['user']) && in_array ($userId, $workflowPermissions[$objWorkflow->getId ()]['user']) )
+                {
+                    $blHasPermission = true;
+                }
+
+                if ( isset ($workflowPermissions[$objWorkflow->getId ()]['team']) && in_array ($teamId, $workflowPermissions[$objWorkflow->getId ()]['team']) )
+                {
+                    $blHasPermission = true;
+                }
+            }
+
+            if ( $blHasPermission === false )
+            {
+                unset ($arrWorkflows[$key]);
+            }
+        }
+
+        $this->view->arrWorkflows = $arrWorkflows;
         $this->view->pagination = $this->getPagination ("processPagination");
     }
 
@@ -245,8 +295,15 @@ class InboxController extends BaseController
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
 
-        $objCase = new Cases();
-        $this->view->html = $objCase->startCase ($workflowId);
+        if ( !$this->checkPermissions ("EASYFLOW_CASES") )
+        {
+            header ("Location: /FormBuilder/errors/error403");
+            die;
+        }
+
+        $objCase = new \BusinessModel\Cases();
+        $objWorkflow = new Workflow($workflowId);
+        $this->view->html = $objCase->startCase ($objWorkflow);
         $this->view->html .= '<input type="hidden" id="workflowid" name="workflowid" value="' . $workflowId . '">';
     }
 
@@ -254,49 +311,132 @@ class InboxController extends BaseController
     {
         $this->view->disable ();
 
-        $objCases = new Cases();
-        $arrFiles = isset ($_FILES['fileUpload']) ? $_FILES : array();
+        if ( !$this->checkPermissions ("EASYFLOW_CASES") )
+        {
+            header ("Location: /FormBuilder/errors/error403");
+            die;
+        }
 
-        $objCases->addCase ($_POST['workflowid'], $_SESSION['user']['usrid'], $_POST, $arrFiles);
+        $objCases = new \BusinessModel\Cases();
+        $arrFiles = isset ($_FILES['fileUpload']) ? $_FILES : array();
+        $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
+        $objWorkflow = new Workflow($_POST['workflowid']);
+        
+        $objCases->addCase ($objWorkflow, $objUser, $_POST, $arrFiles);
     }
 
     public function filterCasesAction ($workflowId)
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
-        $objCases = new Cases();
+        $objCases = new \BusinessModel\Cases();
         $this->view->arrLists = $objCases->getList (array("process" => $workflowId, "limit" => PRODUCTS_PAGE_LIMIT, "start" => 0, "userId" => $_SESSION['user']['username']));
     }
 
     public function filterProcessesAction ()
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
-        $objWorkflow = new Workflow();
-        $this->view->arrWorkflows = $objWorkflow->getAllProcesses (0, 25, 'request_id', 'ASC', null, $_POST['searchText']);
+
+        $arrWorkflows = (new Workflow())->getAllProcesses (0, 25, 'request_id', 'ASC', null, $_POST['searchText']);
+
+        $workflowPermissions = (new \BusinessModel\ProcessPermission (null))->getAllProcessPermissions ();
+        $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
+
+        $teamId = $objUser->getTeam_id ();
+        $userId = $objUser->getUserId ();
+
+        foreach ($arrWorkflows as $key => $objWorkflow) {
+
+            $blHasPermission = false;
+
+            if ( isset ($workflowPermissions[$objWorkflow->getId ()]) )
+            {
+                if ( isset ($workflowPermissions[$objWorkflow->getId ()]['user']) && in_array ($userId, $workflowPermissions[$objWorkflow->getId ()]['user']) )
+                {
+                    $blHasPermission = true;
+                }
+
+                if ( isset ($workflowPermissions[$objWorkflow->getId ()]['team']) && in_array ($teamId, $workflowPermissions[$objWorkflow->getId ()]['team']) )
+                {
+                    $blHasPermission = true;
+                }
+            }
+
+            if ( $blHasPermission === false )
+            {
+                unset ($arrWorkflows[$key]);
+            }
+        }
+
+        $this->view->arrWorkflows = $arrWorkflows;
     }
 
     public function advancedSearchAction ()
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
 
-        $objWorkflowFctory = new WorkflowCollectionFactory();
+        if ( !$this->checkPermissions ("EASYFLOW_ALLCASES") )
+        {
+            header ("Location: /FormBuilder/errors/error403");
+            die;
+        }
+
+        $objWorkflowFctory = new \BusinessModel\WorkflowCollectionFactory();
         $this->view->arrCategories = $objWorkflowFctory->getCategories (null, "request_type", "asc");
 
-        $objWorkflows = new Workflow();
-        $this->view->arrWorkflows = $objWorkflows->getAllProcesses (0, 25, 'workflow_name', 'ASC');
+        $arrWorkflows = (new Workflow())->getAllProcesses (0, 25, 'workflow_name', 'ASC');
 
-        $objUsers = new UsersFactory();
-        $this->view->arrUsers = $objUsers->getUsers (null, 25, 0);
+        $workflowPermissions = (new \BusinessModel\ProcessPermission (null))->getAllProcessPermissions ();
+        $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
+
+        $teamId = $objUser->getTeam_id ();
+        $userId = $objUser->getUserId ();
+
+        foreach ($arrWorkflows as $key => $objWorkflow) {
+
+            $blHasPermission = false;
+
+            if ( isset ($workflowPermissions[$objWorkflow->getId ()]) )
+            {
+                if ( isset ($workflowPermissions[$objWorkflow->getId ()]['user']) && in_array ($userId, $workflowPermissions[$objWorkflow->getId ()]['user']) )
+                {
+                    $blHasPermission = true;
+                }
+
+                if ( isset ($workflowPermissions[$objWorkflow->getId ()]['team']) && in_array ($teamId, $workflowPermissions[$objWorkflow->getId ()]['team']) )
+                {
+                    $blHasPermission = true;
+                }
+            }
+
+            if ( $blHasPermission === false )
+            {
+                unset ($arrWorkflows[$key]);
+            }
+        }
+
+        $this->view->arrWorkflows = $arrWorkflows;
+
+        //$arrayWhere = null, $sortField = null, $sortDir = null, $start = null, $limit = null
+        $objUsers = new \BusinessModel\UsersFactory();
+        $this->view->arrUsers = $objUsers->getUsers (array(), "u.username", "ASC", 0, 25);
     }
 
     public function searchCasesAction ($page, $orderBy, $orderDir)
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
+
+        if ( !$this->checkPermissions ("EASYFLOW_ALLCASES") )
+        {
+            header ("Location: /FormBuilder/errors/error403");
+            die;
+        }
+
         $process = empty ($_POST['process']) ? null : $_POST['process'];
         $category = empty ($_POST['category']) ? null : $_POST['category'];
         $user = empty ($_POST['user']) ? null : $_POST['user'];
         $status = empty ($_POST['status']) ? null : $_POST['status'];
 
-        $objCases = new Cases();
+        $objCases = new \BusinessModel\Cases();
 
         $this->view->arrLists = $objCases->getList (
                 array(

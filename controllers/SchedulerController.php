@@ -196,6 +196,12 @@ class SchedulerController extends BaseController
 
     public function kanbanAction ($requestType = null)
     {
+        if ( !$this->checkPermissions ("EASYFLOW_SCHEDULER") )
+        {
+            header ("Location: /FormBuilder/errors/error403");
+            die;
+        }
+
         $objRequestFormatter = new RequestFormatter();
         $objProjects = new Projects();
 
@@ -204,14 +210,14 @@ class SchedulerController extends BaseController
         $arrTeams = array();
 
         /*         * ***************** Build Request Types ****************************** */
-        $arrAllRequestTypes = $objRequestFormatter->getRequestTypes();
-        
+        $arrAllRequestTypes = $objRequestFormatter->getRequestTypes ();
+
         foreach ($arrAllRequestTypes as $requestTypes) {
             $arrRequestTypes[$requestTypes['request_id']] = $requestTypes;
 
             /*             * ************************ Build Steps ************************** */
             $arrSteps = $objRequestFormatter->getSteps ($requestTypes['request_id']);
-            
+
             foreach ($arrSteps as $stepKey => $arrStep) {
 
                 $arrColumns[$requestTypes['request_id']][$stepKey]['name'] = $arrStep['name'];
@@ -247,7 +253,7 @@ class SchedulerController extends BaseController
         echo "ALL TEAMS===============================";
         print_r ($arrAllTeams);
         echo "TEAMS===============================";
-         print_r ($arrTeams[$requestType]);
+        print_r ($arrTeams[$requestType]);
         //die;
 
         if ( $requestType === null && $requestType !== "null" )
@@ -260,13 +266,13 @@ class SchedulerController extends BaseController
             $this->view->teams = json_encode ($arrTeams[$requestType]);
 
             //if ( isset ($parentId) && is_numeric ($parentId) )
-           // {
-                //$this->view->columns = json_encode ($arrColumns[$parentId]);
+            // {
+            //$this->view->columns = json_encode ($arrColumns[$parentId]);
             //}
             //else
             //{
-                //die("Here");
-                $this->view->columns = json_encode ($arrColumns[$requestType]);
+            //die("Here");
+            $this->view->columns = json_encode ($arrColumns[$requestType]);
             //}
         }
 

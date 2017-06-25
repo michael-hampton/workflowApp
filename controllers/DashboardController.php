@@ -15,6 +15,12 @@ class DashboardController extends BaseController
 
     public function test2Action ()
     {
+        if ( !$this->checkPermissions ("EASYFLOW_DASHBOARD") )
+        {
+            header ("Location: /FormBuilder/errors/error403");
+            die;
+        }
+
         $objDashboard = new DashboardFactory();
         $objProjects = new Projects();
         $arrProjects = $objProjects->getAllProjects (array());
@@ -24,10 +30,16 @@ class DashboardController extends BaseController
 
     public function indexAction ()
     {
+        if ( !$this->checkPermissions ("EASYFLOW_DASHBOARD") )
+        {
+            header ("Location: /FormBuilder/errors/error403");
+            die;
+        }
+
         $objProjects = new Projects();
         $arrProjects = $objProjects->getAllProjects (array());
         $this->view->arrProjects = $arrProjects;
-        $objReports = new DashboardInstance($arrProjects);
+        $objReports = new DashboardInstance ($arrProjects);
 
         $this->view->arrProjectsForUser = $objReports->getProjectsForUser ();
         $this->view->arrCompletedProjects = $objReports->getCompletedProjects ();

@@ -161,7 +161,7 @@ class IndexController extends BaseController
             $priorites[$arrPriority['id']]['name'] = $arrPriority['name'];
         }
 
-        $objAttachments = new Attachments();
+        $objAttachments = new \BusinessModel\Attachments();
         $this->view->attachmentCount = count ($objAttachments->getAllAttachments ($projectId));
 
         $this->view->arrPriorities = $priorites;

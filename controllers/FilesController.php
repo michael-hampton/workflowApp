@@ -7,7 +7,11 @@ class FilesController extends BaseController
 
     public function indexAction ()
     {
-        
+        if ( !$this->checkPermissions ("EASYFLOW_FOLDERS_VIEW") )
+        {
+            header ("Location: /FormBuilder/errors/error403");
+            die;
+        }
     }
 
     public function loadAction ()
@@ -51,6 +55,8 @@ class FilesController extends BaseController
             $re = ['conf' => $fm_conf, 'lang' => $tl];
         else
             $re['conf']['LOGG_IN'] = $fm_conf['LOGG_IN'];    // idex LOGG_IN is needed in ajax response to check logg-in
+
+
 
 
 
@@ -113,7 +119,7 @@ class FilesController extends BaseController
                 for ($i = 0; $i < $nr_p; $i++)
                     $ar_param[] = $param[$i_param[$i]];
 
-                include $_SERVER['DOCUMENT_ROOT'].'/core/app/library/Documents/' . strtolower ($cls) . '.php';    // file with needed class
+                include $_SERVER['DOCUMENT_ROOT'] . '/core/app/library/Documents/' . strtolower ($cls) . '.php';    // file with needed class
                 $re_m = call_user_func_array ('\\' . $cls . '::' . $method, $ar_param);
 
                 // define output response

@@ -16,7 +16,7 @@ class CommentsController extends BaseController
     {
         $this->view->disable ();
 
-        $objCases = new Cases();
+        $objCases = new \BusinessModel\Cases();
         $objCases->saveCaseNote ($_POST['projectId'], $_SESSION['user']['username'], $_POST['comment'], true);
         die;
     }
@@ -26,7 +26,7 @@ class CommentsController extends BaseController
         $this->view->projectId = $projectId;
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
 
-        $objCases = new Cases();
+        $objCases = new \BusinessModel\Cases();
         $this->view->arrComments = $objCases->getCaseNotes ($projectId, $_SESSION['user']['username'], array(
             "start" => 0,
             "limit" => 30,

@@ -8,7 +8,7 @@ class AttachmentsController extends BaseController
     public function uploadAttachedFileAction ($projectId)
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
-        $objAttachments = new Attachments();
+        $objAttachments = new \BusinessModel\Attachments();
 
         // Check if image file is a actual image or fake image
         if ( isset ($_FILES["file"]) && !empty ($_FILES["file"]["name"]) )
@@ -53,7 +53,7 @@ class AttachmentsController extends BaseController
                     "uploaded_by" => $_SESSION['user']['username'],
                     "files" => $_FILES);
 
-                $objAttachments = new Attachments();
+                $objAttachments = new \BusinessModel\Attachments();
                 $objAttachments->loadObject ($arrData);
             }
         }
@@ -62,7 +62,7 @@ class AttachmentsController extends BaseController
     public function getAttachmentsAction ($projectId)
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
-        $objAttachments = new Attachments();
+        $objAttachments = new \BusinessModel\Attachments();
         $this->view->attachmnets = $objAttachments->getAllAttachments ($projectId);
         $this->view->writePermission = true;
         $this->view->projectId = $projectId;

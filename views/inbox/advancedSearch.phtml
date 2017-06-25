@@ -7,8 +7,8 @@
                         <label class="control-label" for="order_id">Process</label>
                         <select id="process" name="process" class="form-control">
                             <option value="">Select value</option>
-                            <?php foreach ($arrWorkflows as $arrWorkflow): ?>
-                                <option value="<?= $arrWorkflow['workflow_id'] ?>"><?= $arrWorkflow['workflow_name'] ?></option>
+                            <?php foreach ($arrWorkflows as $objWorkflow): ?>
+                                <option value="<?= $objWorkflow->getId() ?>"><?= $objWorkflow->getworkflowName() ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -29,7 +29,7 @@
                         <label class="control-label" for="customer">User</label>
                         <select id="user" name="user" class="form-control">
                             <option value="">Select value</option>
-                            <?php foreach ($arrUsers as $arrUser): ?>
+                            <?php foreach ($arrUsers['data'] as $arrUser): ?>
                                 <option value="<?= $arrUser->getUsername () ?>"><?= $arrUser->getUsername () ?></option>
                             <?php endforeach; ?>
                         </select>
@@ -94,7 +94,6 @@
 
     $ (document).ready (function ()
     {
-
         $ ("#SearchCase").off ();
         $ ("#SearchCase").on ("click", function ()
         {
@@ -134,7 +133,6 @@
 
     function getProjectDetails (projectId)
     {
-        alert (projectId);
         $ ("#createProject").html ("");
         $.ajax ({
             type: "GET",

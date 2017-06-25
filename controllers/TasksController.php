@@ -24,7 +24,7 @@ class TasksController extends BaseController
         $this->view->disable ();
         $objElements = new Elements ($_SESSION['selectedRequest'], $id);
 
-        $objCases = new Cases();
+        $objCases = new \BusinessModel\Cases();
         $objCases->assignUsers ($objElements);
     }
 
@@ -33,7 +33,7 @@ class TasksController extends BaseController
         $this->view->disable ();
         $objElement = new Elements ($_SESSION['selectedRequest'], $id);
 
-        $objCases = new Cases();
+        $objCases = new \BusinessModel\Cases();
         $objCases->updateStatus ($objElement, "COMPLETE");
     }
 
@@ -42,7 +42,7 @@ class TasksController extends BaseController
         $this->view->disable ();
         $objElements = new Elements ($_SESSION['selectedRequest'], $id);
 
-        $objCases = new Cases();
+        $objCases = new \BusinessModel\Cases();
         $objCases->assignUsers ($objElements);
     }
 
@@ -59,7 +59,7 @@ class TasksController extends BaseController
 
         $objElements = new Elements ($_SESSION['selectedRequest'], $id);
 
-        $objCases = new Cases();
+        $objCases = new \BusinessModel\Cases();
         $objCases->updateStatus ($objElements, "ABANDONED");
     }
 
@@ -69,7 +69,7 @@ class TasksController extends BaseController
 
 
         $objElements = new Elements ($_SESSION['selectedRequest'], $id);
-        $objCases = new Cases();
+        $objCases = new \BusinessModel\Cases();
         $objCases->updateStatus ($objElements, "HELD");
     }
 
@@ -79,7 +79,7 @@ class TasksController extends BaseController
 
 
         $objElement = new Elements ($_SESSION['selectedRequest'], $id);
-        $objCases = new Cases();
+        $objCases = new \BusinessModel\Cases();
         $objCases->updateStatus ($objElement, "REJECT", $_POST['reason']);
     }
 
@@ -223,11 +223,11 @@ class TasksController extends BaseController
         {
             $documentType = isset ($_POST['document_type']) ? $_POST['document_type'] : '';
 
-            $objCases = new Cases();
+            $objCases = new \BusinessModel\Cases();
             $arrFiles = $objCases->uploadCaseFiles ($_FILES, $_SESSION['selectedRequest'], $objStep, $documentType
             );
         }
-
+        
         $arrStepData['claimed'] = $_SESSION["user"]["username"];
         $arrStepData["dateCompleted"] = date ("Y-m-d H:i;s");
         $arrStepData['status'] = "SAVED";
@@ -238,7 +238,7 @@ class TasksController extends BaseController
             $_POST['form']['file2'] = implode (",", $arrFiles);
         }
 
-        $objUser = (new UsersFactory)->getUser ($_SESSION['user']['usrid']);
+        $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
 
         $validation = $objStep->save ($objElement, $_POST['form'], $objUser);
 
@@ -253,8 +253,9 @@ class TasksController extends BaseController
         {
             $nextStep = $objStep->complete ($objElement, $arrStepData, $objUser);
         }
+        
 
-        if ( is_numeric ($nextStep->getStepId ()) && $nextStep->getStepId () != 0 )
+        if (is_object($nextStep) && is_numeric ($nextStep->getStepId ()) && $nextStep->getStepId () != 0 )
         {
             echo json_encode (array("validation" => "OK",
                 "next_step" => $nextStep->getStepId ()));
@@ -315,14 +316,14 @@ class TasksController extends BaseController
         $this->view->review = false;
         $blCompletedStep = false;
 
-        $objUser = (new UsersFactory ())->getUser ($_SESSION['user']['usrid']);
+        $objUser = (new \BusinessModel\UsersFactory ())->getUser ($_SESSION['user']['usrid']);
 
         if ( empty ($objUser) )
         {
             die ("BAD USER");
         }
 
-        $objStepPermissions = new StepPermissions ($step);
+        $objStepPermissions = new \BusinessModel\StepPermissions (new Task($step));
         $blHasPermission = $objStepPermissions->validateUserPermissions ($objUser);
         $this->view->canSave = false;
 
@@ -431,7 +432,7 @@ class TasksController extends BaseController
             }
             else
             {
-                $objCases = new Cases();
+                $objCases = new \BusinessModel\Cases();
                 $users = $objCases->getUsersToReassign ($_SESSION['selectedRequest'], $id, $objUser, $objStep);
 
                 $this->view->resource_allocator = false;
@@ -534,7 +535,7 @@ class TasksController extends BaseController
             $this->view->assignedTo = $objProject->object['audit_data']['elements'][$id]['steps'][$stepFrom]['claimed'];
         }
 
-        if ( $blCompleted === true )
+        if ( $blCompleted === true && $status !== "REJECTED" )
         {
             if ( $blShowPrevious === true )
             {
@@ -602,8 +603,9 @@ class TasksController extends BaseController
                         "message" => "This sample has failed testing"
                     );
 
+   
                     $this->view->partial ("tasks/rejected");
-                    return;
+                    die;
                 }
             }
             elseif ( $blCompletedStep === false )
@@ -660,7 +662,7 @@ class TasksController extends BaseController
 
             /*             * ************** HTML FORM HERE ****************** */
             $html = '';
-            $objForm = new Form();
+            $objForm = new \BusinessModel\Form();
             $html = $objForm->buildFormForStep ($objStep, $objUser, $_SESSION['selectedRequest'], $id);
 
             $this->view->html = $html;
@@ -754,7 +756,7 @@ class TasksController extends BaseController
 
         $nameFile = $info['basename'] . $ver . '.' . $ext;
 
-        $objFileUpload = new FileUpload();
+        $objFileUpload = new \BusinessModel\FileUpload();
         $objFileUpload->streamFile ($realPath, true, $nameFile);
 
         die;

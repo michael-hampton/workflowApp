@@ -453,15 +453,17 @@ class RequestFormatter extends BaseModel
                 $arrComments = $oCase->getCaseNotes ($arrProject['id'], $_SESSION['user']['usrid']);
 
                 $commentCount = 0;
-                foreach ($arrComments['data'] as $arrComment) {
+                if ( !empty ($arrComments) )
+                {
+                    foreach ($arrComments['data'] as $arrComment) {
 
-                    $arrKanbanUsers['comments'][$commentCount]['body'] = $arrComment['note_content'];
-                    $arrKanbanUsers['comments'][$commentCount]['datetime'] = $arrComment['note_date'];
-                    $arrKanbanUsers['comments'][$commentCount]['user'] = $arrComment['usr_uid'];
+                        $arrKanbanUsers['comments'][$commentCount]['body'] = $arrComment['note_content'];
+                        $arrKanbanUsers['comments'][$commentCount]['datetime'] = $arrComment['note_date'];
+                        $arrKanbanUsers['comments'][$commentCount]['user'] = $arrComment['usr_uid'];
 
-                    $commentCount++;
+                        $commentCount++;
+                    }
                 }
-
 
                 //$arrKanbanUsers['tags'][0] = array("test tag");
                 $arrKanbanUsers['owner'] = $data['scheduler']['added_by'];

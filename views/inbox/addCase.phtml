@@ -11,28 +11,28 @@
     <div class="client-detail col-lg-4 processesList" style="background-color: #FFF; padding-top: 10px;">
         <?php
         $requestId = null;
-        foreach ($arrWorkflows as $arrWorkflow) {
+        foreach ($arrWorkflows as $objWorkflow) {
             ?>
 
             <?php
-            if ( $requestId === null || $requestId !== $arrWorkflow['request_id'] )
+            if ( $requestId === null || $requestId !== $objWorkflow->getRequestId() )
             {
                 echo '</ul><ul class="list-group clear-list">'
-                . '<strong>' . $arrWorkflow['PRO_CATEGORY_LABEL'] . '</strong>';
+                . '<strong>' . $objWorkflow->getcategoryName() . '</strong>';
 
                 $end = true;
             }
             ?>
 
-            <li workflowid="<?= $arrWorkflow['workflow_id'] ?>" class="list-group-item fist-item" style="border-bottom: 1px dotted #CCC;">
+            <li workflowid="<?= $objWorkflow->getId() ?>" class="list-group-item fist-item" style="border-bottom: 1px dotted #CCC;">
                 <span class="pull-right"> 
-                    <button workflowid="<?= $arrWorkflow['workflow_id'] ?>" type="button" class="btn btn-primary btn-xs addNewCase">+</button> 
+                    <button workflowid="<?= $objWorkflow->getId() ?>" type="button" class="btn btn-primary btn-xs addNewCase">+</button> 
                 </span>
-                <?= $arrWorkflow['workflow_name'] ?>
+                <?= $objWorkflow->getworkflowName() ?>
             </li>
 
             <?php
-            $requestId = $arrWorkflow['request_id'];
+            $requestId = $objWorkflow->getRequestId();
             $end = false;
         }
         ?>
