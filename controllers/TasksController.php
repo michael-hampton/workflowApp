@@ -227,13 +227,13 @@ class TasksController extends BaseController
             $arrFiles = $objCases->uploadCaseFiles ($_FILES, $_SESSION['selectedRequest'], $objStep, $documentType
             );
         }
-        
+
         $arrStepData['claimed'] = $_SESSION["user"]["username"];
         $arrStepData["dateCompleted"] = date ("Y-m-d H:i;s");
         $arrStepData['status'] = "SAVED";
 
 
-        if ( isset ($arrFiles) && !empty ($arrFiles) )
+        if ( isset ($arrFiles) && is_array ($arrFiles) )
         {
             $_POST['form']['file2'] = implode (",", $arrFiles);
         }
@@ -245,6 +245,7 @@ class TasksController extends BaseController
         if ( $validation === false )
         {
             $validate['validation'] = $objStep->getFieldValidation ();
+
             echo json_encode ($validate);
             return false;
         }
@@ -253,9 +254,9 @@ class TasksController extends BaseController
         {
             $nextStep = $objStep->complete ($objElement, $arrStepData, $objUser);
         }
-        
 
-        if (is_object($nextStep) && is_numeric ($nextStep->getStepId ()) && $nextStep->getStepId () != 0 )
+
+        if ( is_object ($nextStep) && is_numeric ($nextStep->getStepId ()) && $nextStep->getStepId () != 0 )
         {
             echo json_encode (array("validation" => "OK",
                 "next_step" => $nextStep->getStepId ()));
@@ -284,6 +285,7 @@ class TasksController extends BaseController
         $objStep = $objWorkflow->getNextStep ();
 
         $nextStep = $objStep->getWorkflowStepId ();
+
         $arrSteps = $objWorkflow->getStepsForWorkflow ();
         $arrWorkflowData = $arrSteps[$nextStep];
         $currentStepId = $objStep->getStepId ();
@@ -323,9 +325,14 @@ class TasksController extends BaseController
             die ("BAD USER");
         }
 
-        $objStepPermissions = new \BusinessModel\StepPermissions (new Task($step));
+        $objTask = new Task();
+        $objTask->setTasUid ($currentStepId);
+
+        $objStepPermissions = new \BusinessModel\StepPermission ($objTask);
         $blHasPermission = $objStepPermissions->validateUserPermissions ($objUser);
         $this->view->canSave = false;
+
+        //die("OK");
 
         if ( !$blHasPermission )
         {
@@ -369,8 +376,8 @@ class TasksController extends BaseController
             $canReject = true;
         }
 
-        if ( isset ($objProject->object['audit_data']['elements'][$id]['steps'][$step]['status']) &&
-                $objProject->object['audit_data']['elements'][$id]['steps'][$step]['status'] == "IN REVIEW" )
+        if ( isset ($objProject->object['audit_data']['elements'][$id]['steps'][$arrWorkflowData['id']]['status']) &&
+                $objProject->object['audit_data']['elements'][$id]['steps'][$arrWorkflowData['id']]['status'] == "IN REVIEW" )
         {
             $this->view->review = true;
         }
@@ -438,13 +445,13 @@ class TasksController extends BaseController
                 $this->view->resource_allocator = false;
 
                 foreach ($users['data'] as $user) {
-                    if ( trim($user['username']) === trim($objUser->getUsername ()) )
+                    if ( trim ($user['username']) === trim ($objUser->getUsername ()) )
                     {
                         $this->view->resource_allocator = true;
                         break;
                     }
                 }
-                
+
                 $this->view->users = $users;
                 $status = "ASSIGN";
             }
@@ -603,7 +610,7 @@ class TasksController extends BaseController
                         "message" => "This sample has failed testing"
                     );
 
-   
+
                     $this->view->partial ("tasks/rejected");
                     die;
                 }
@@ -666,6 +673,27 @@ class TasksController extends BaseController
             $html = $objForm->buildFormForStep ($objStep, $objUser, $_SESSION['selectedRequest'], $id);
 
             $this->view->html = $html;
+
+
+            if ( $this->view->review === true )
+            {
+                $processSupervisor = new \BusinessModel\ProcessSupervisor();
+                $blIsSupervisor = $processSupervisor->isUserProcessSupervisor ($objWorkflow, $objUser);
+
+                if ( $blIsSupervisor !== true )
+                {
+                    $this->view->message = array(
+                        "type" => "someoneClaimed",
+                        "message" => "The task has failed validation and must be reviewed by the process supervisor."
+                    );
+
+                    $this->view->partial ("tasks/nopermission");
+                    return false;
+                }
+
+                $this->view->partial ("tasks/review");
+                die;
+            }
 
             $this->view->partial ("tasks/getStepContent");
             return;

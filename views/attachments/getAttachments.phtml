@@ -19,14 +19,15 @@
         foreach ($attachmnets as $attachmentKey => $attachment) :
             echo '<div class="file-box">
                                         <div class="file">
-                                            <a href="' . $attachment->getDownloadPath() . $attachment->getPrfFielname() . '">
+                                        <a href="#" id="' . $attachment->getId () . '" class="deleteAttachment">x</a>
+                                            <a href="/FormBuilder/attachments/download/' . $attachment->getId () . '">
                                                 <div class="icon">
                                                     <i class="fa fa-file"></i>
                                                 </div>
                                                 <div class="file-name">
-                                                   ' . $attachment->getPrfFielname() . '
+                                                   ' . $attachment->getPrfFielname () . '
                                                     <br>
-                                                    <small>Added:' . $attachment->getUsrUid() . ' <br> ' . date ("M d, Y", strtotime ($attachment->getPrfCreateDate())) . '</small>
+                                                    <small>Added:' . $attachment->getUsrUid () . ' <br> ' . date ("M d, Y", strtotime ($attachment->getPrfCreateDate ())) . '</small>
                                                 </div>
                                             </a>
                                         </div>
@@ -101,6 +102,21 @@
                 $ ("#uploadSuccessWrapper").slideDown ();
                 $ ("#filelist").hide ();
                 $ (".attachments-list").html (response);
+
+            }
+        });
+    });
+
+    $ (".deleteAttachment").on ("click", function ()
+    {
+        var id = $ (this).attr ("id");
+
+        $.ajax ({
+            type: "GET",
+            url: "/FormBuilder/attachments/deleteAttachment/" + id + "/" + $ ("#projectId").val (),
+            success: function (response)
+            {
+                alert(response);
 
             }
         });

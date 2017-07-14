@@ -15,7 +15,8 @@
             <th>Subject</th>
             <th>Step</th>
              <th>Process</th>
-            <th>Date Sent</th>
+              <th>Due Date</th>
+<!--            <th>Date Sent</th>-->
         </tr>
     </thead>
 
@@ -37,7 +38,8 @@
                 <td class=""><?= $arrNotification['project']->getCurrent_step () ?></td>
                 <td class=""><?= $arrNotification['project']->getWorkflowName () ?></td>
 
-                <td class="text-right mail-date"><?= $arrNotification['notifications']->getDateSent () ?></td>
+<!--                <td class="text-right mail-date"><?= $arrNotification['notifications']->getDateSent () ?></td>-->
+                 <td class=""><?= $arrNotification['project']->getDueDate () ?></td>
             </tr>
 
             <?php

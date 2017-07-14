@@ -8,7 +8,7 @@ class AttachmentsController extends BaseController
     public function uploadAttachedFileAction ($projectId)
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
-        $objAttachments = new \BusinessModel\Attachments();
+        $objAttachments = new \BusinessModel\Attachment();
 
         // Check if image file is a actual image or fake image
         if ( isset ($_FILES["file"]) && !empty ($_FILES["file"]["name"]) )
@@ -26,14 +26,14 @@ class AttachmentsController extends BaseController
                 $uploadOk = 0;
             }
 
-            /*$arrAllowed = array("csv", "jpg", "png", "doc", "pdf", "jpeg", "gif");
+            /* $arrAllowed = array("csv", "jpg", "png", "doc", "pdf", "jpeg", "gif");
 
-            if ( !in_array ($imageFileType, $arrAllowed) )
-            {
-                die ("1");
-                echo "Sorry, only JPG, JPEG, PNG & GIF files are allowed.";
-                $uploadOk = 0;
-            }*/
+              if ( !in_array ($imageFileType, $arrAllowed) )
+              {
+              die ("1");
+              echo "Sorry, only JPG, JPEG, PNG & GIF files are allowed.";
+              $uploadOk = 0;
+              } */
 
             // Check if $uploadOk is set to 0 by an error
             if ( $uploadOk == 0 )
@@ -53,7 +53,7 @@ class AttachmentsController extends BaseController
                     "uploaded_by" => $_SESSION['user']['username'],
                     "files" => $_FILES);
 
-                $objAttachments = new \BusinessModel\Attachments();
+                $objAttachments = new \BusinessModel\Attachment();
                 $objAttachments->loadObject ($arrData);
             }
         }
@@ -62,7 +62,7 @@ class AttachmentsController extends BaseController
     public function getAttachmentsAction ($projectId)
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
-        $objAttachments = new \BusinessModel\Attachments();
+        $objAttachments = new \BusinessModel\Attachment();
         $this->view->attachmnets = $objAttachments->getAllAttachments ($projectId);
         $this->view->writePermission = true;
         $this->view->projectId = $projectId;
@@ -83,40 +83,28 @@ class AttachmentsController extends BaseController
     public function downloadAction ($id)
     {
         $this->view->disable ();
-        $objAttachments = new Attachments();
+        $objInputDocument = new \BusinessModel\Step\InputDocument();
+
+
+        $objAttachments = new \BusinessModel\Attachment();
         $objAttachments->setId ($id);
         $arrAttachment = $objAttachments->getAttachment ();
 
-        $filedata = $arrAttachment[0]['contents'];
+        $objInputDocument->downloadInputDocument ($id, $arrAttachment[0]['file_type'], $arrAttachment);
+    }
 
-        if ( $filedata )
-        {
-            // GET A NAME FOR THE FILE
-            $basename = basename ($arrAttachment[0]['filename']);
+    public function deleteAttachmentAction ($id, $projectUid)
+    {
+        $this->view->disable ();
+        $objInputDocument = new \BusinessModel\Step\InputDocument();
 
-            // THESE HEADERS ARE USED ON ALL BROWSERS
-            header ("Content-Type: application-x/force-download");
-            header ("Content-Disposition: attachment; filename=$basename");
-            header ("Content-length: " . (string) (strlen ($filedata)));
-            header ("Expires: " . gmdate ("D, d M Y H:i:s", mktime (date ("H") + 2, date ("i"), date ("s"), date ("m"), date ("d"), date ("Y"))) . " GMT");
-            header ("Last-Modified: " . gmdate ("D, d M Y H:i:s") . " GMT");
+        $objAttachments = new \BusinessModel\Attachment();
+        $objAttachments->setId ($id);
+        $arrAttachment = $objAttachments->getAttachment ();
+        
+        $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
 
-            // THIS HEADER MUST BE OMITTED FOR IE 6+
-            if ( FALSE === strpos ($_SERVER["HTTP_USER_AGENT"], 'MSIE ') )
-            {
-                header ("Cache-Control: no-cache, must-revalidate");
-            }
-
-            // THIS IS THE LAST HEADER
-            header ("Pragma: no-cache");
-
-            // FLUSH THE HEADERS TO THE BROWSER
-            flush ();
-
-            // CAPTURE THE FILE IN THE OUTPUT BUFFERS - WILL BE FLUSHED AT SCRIPT END
-            ob_start ();
-            echo $filedata;
-        }
+        $objInputDocument->throwExceptionIfHaventPermissionToDelete($projectUid, $objUser, $arrAttachment);
     }
 
 }

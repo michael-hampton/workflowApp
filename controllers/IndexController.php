@@ -13,14 +13,11 @@ class IndexController extends BaseController
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
         $objSave = new Save ($_SESSION['selectedRequest']);
-        $objUser = (new UsersFactory())->getUser($_SESSION['user']['usrid']);
+        $objUser = (new \BusinessModel\UsersFactory())->getUser($_SESSION['user']['usrid']);
 
         $objWorkflow = new Workflow (null, $objSave);
 
         $objStep = $objWorkflow->getNextStep ();
-
-        echo $objStep->getStepId ();
-        echo "Yes";
 
         $this->view->steps = $objWorkflow->getStepsForWorkflow ();
 
@@ -31,7 +28,7 @@ class IndexController extends BaseController
 
         $objSave = new Save ($projectId);
 
-        $objForm = new Form();
+        $objForm = new \BusinessModel\Form();
         $html = $objForm->buildFormForStep ($objStep, $objUser, $projectId);
 
         $this->view->html = $html;
@@ -81,6 +78,8 @@ class IndexController extends BaseController
         $this->view->disable ();
         $objSave = new Save ($projectId);
         $arrData = array();
+        
+        $status = '';
 
         $arrErrors = array();
 
@@ -137,14 +136,17 @@ class IndexController extends BaseController
         $arrData['name'] = $objSave->object['step_data']['job']['name'];
         $arrData['priority'] = $objSave->object['step_data']['job']['priority'];
         $arrData['dueDate'] = $objSave->object['step_data']['job']['dueDate'];
+        
+        $objUser = (new \BusinessModel\UsersFactory())->getUser($_SESSION['user']['usrid']);
 
         $objStep = new WorkflowStep (null, $objSave);
-        $objStep->save ($objSave, $arrData);
+        $objStep->save ($objSave, $arrData, $objUser);
         $objStep->complete ($objSave, array(
             "dateCompleted" => date ("Y-m-d H:i:s"),
             "status" => $status,
             "claimed" => $_SESSION['user']['username']
-                )
+                ),
+                $objUser
         );
     }
 
@@ -161,7 +163,7 @@ class IndexController extends BaseController
             $priorites[$arrPriority['id']]['name'] = $arrPriority['name'];
         }
 
-        $objAttachments = new \BusinessModel\Attachments();
+        $objAttachments = new \BusinessModel\Attachment();
         $this->view->attachmentCount = count ($objAttachments->getAllAttachments ($projectId));
 
         $this->view->arrPriorities = $priorites;
