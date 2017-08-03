@@ -23,9 +23,10 @@ class TasksController extends BaseController
     {
         $this->view->disable ();
         $objElements = new Elements ($_SESSION['selectedRequest'], $id);
+        $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
 
         $objCases = new \BusinessModel\Cases();
-        $objCases->assignUsers ($objElements);
+        $objCases->assignUsers ($objElements, $objUser);
     }
 
     public function moveOnAction ($workflow, $id)
@@ -34,16 +35,18 @@ class TasksController extends BaseController
         $objElement = new Elements ($_SESSION['selectedRequest'], $id);
 
         $objCases = new \BusinessModel\Cases();
-        $objCases->updateStatus ($objElement, "COMPLETE");
+        $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
+        $objCases->updateStatus ($objElement, $objUser, "COMPLETE");
     }
 
     public function AssignAction ($user, $workflow, $id)
     {
         $this->view->disable ();
         $objElements = new Elements ($_SESSION['selectedRequest'], $id);
+        $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
 
         $objCases = new \BusinessModel\Cases();
-        $objCases->assignUsers ($objElements);
+        $objCases->assignUsers ($objElements, $objUser);
     }
 
     public function giveAChanceAction ($projectId, $step)
@@ -60,27 +63,28 @@ class TasksController extends BaseController
         $objElements = new Elements ($_SESSION['selectedRequest'], $id);
 
         $objCases = new \BusinessModel\Cases();
-        $objCases->updateStatus ($objElements, "ABANDONED");
+        $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
+        $objCases->updateStatus ($objElements, $objUser, "ABANDONED");
     }
 
     public function holdAction ($workflow, $id)
     {
         $this->view->disable ();
 
-
         $objElements = new Elements ($_SESSION['selectedRequest'], $id);
         $objCases = new \BusinessModel\Cases();
-        $objCases->updateStatus ($objElements, "HELD");
+        $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
+        $objCases->updateStatus ($objElements, $objUser, "HELD");
     }
 
     public function rejectAction ($workflow, $id)
     {
         $this->view->disable ();
 
-
         $objElement = new Elements ($_SESSION['selectedRequest'], $id);
         $objCases = new \BusinessModel\Cases();
-        $objCases->updateStatus ($objElement, "REJECT", $_POST['reason']);
+        $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
+        $objCases->updateStatus ($objElement, $objUser, "REJECT", $_POST['reason']);
     }
 
     public function getTasksAction ($projectId)
@@ -221,10 +225,25 @@ class TasksController extends BaseController
 
         if ( isset ($_FILES['fileUpload']) )
         {
+            if ( !isset ($_FILES['fileUpload']['name'][0]) || trim ($_FILES['fileUpload']['name'][0]) == "" )
+            {
+                echo json_encode (array("validation" => array(
+                        0 => array(
+                            "message" => "missing_data",
+                            "id" => "file2"
+                        )
+                    )
+                        )
+                );
+
+                return false;
+            }
+
             $documentType = isset ($_POST['document_type']) ? $_POST['document_type'] : '';
 
             $objCases = new \BusinessModel\Cases();
-            $arrFiles = $objCases->uploadCaseFiles ($_FILES, $_SESSION['selectedRequest'], $objStep, $documentType
+            $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
+            $arrFiles = $objCases->uploadCaseFiles ($_FILES, $_SESSION['selectedRequest'], $objStep, $objUser, $documentType
             );
         }
 
@@ -397,9 +416,34 @@ class TasksController extends BaseController
                 !isset ($objProject->object['audit_data']['elements'][$id]['steps'][$arrWorkflowData['id']]['claimed']) &&
                 $step >= $currentStepId )
         {
-            $status = "CLAIM";
-        }
+            $arrUsers = (new \BusinessModel\Task())->getTaskAssigneesAll ($workflow, $step, '', 0, 100, "user");
 
+            $hasUser = false;
+
+            if ( !empty ($arrUsers) )
+            {
+                foreach ($arrUsers as $arrUser) {
+                    if ( trim ($arrUser['aas_username']) === trim ($_SESSION["user"]["username"]) )
+                    {
+                        $hasUser = true;
+                        $blIsClaimed = true;
+                        $status = "CLAIM";
+                    }
+                }
+            }
+
+            if ( $hasUser === false )
+            {
+                //DONE
+                $this->view->message = array(
+                    "type" => "nopermission",
+                    "message" => "You have no permission to complete this step."
+                );
+
+
+                $blHasPermission = false;
+            }
+        }
 
         if ( isset ($objProject->object['audit_data']['elements'][$id]['steps'][$arrWorkflowData['id']]['status']) &&
                 $objProject->object['audit_data']['elements'][$id]['steps'][$arrWorkflowData['id']]['status'] == "REJECT" )
@@ -439,21 +483,37 @@ class TasksController extends BaseController
             }
             else
             {
-                $objCases = new \BusinessModel\Cases();
-                $users = $objCases->getUsersToReassign ($_SESSION['selectedRequest'], $id, $objUser, $objStep);
 
+                $arrUsers = (new \BusinessModel\Task())->getTaskAssigneesAll ($workflow, $step, '', 0, 100, "user");
+
+                $hasUser = false;
                 $this->view->resource_allocator = false;
 
-                foreach ($users['data'] as $user) {
-                    if ( trim ($user['username']) === trim ($objUser->getUsername ()) )
-                    {
-                        $this->view->resource_allocator = true;
-                        break;
+                if ( !empty ($arrUsers) )
+                {
+                    foreach ($arrUsers as $arrUser) {
+                        if ( trim ($arrUser['aas_username']) === trim ($_SESSION["user"]["username"]) )
+                        {
+                            $hasUser = true;
+                            $this->view->resource_allocator = true;
+                            $status = "ASSIGN";
+                        }
                     }
                 }
 
-                $this->view->users = $users;
-                $status = "ASSIGN";
+                if ( $hasUser === false )
+                {
+                    //DONE
+                    $this->view->message = array(
+                        "type" => "nopermission",
+                        "message" => "You have no permission to complete this step."
+                    );
+
+
+                    $blHasPermission = false;
+                }
+                
+                 $this->view->users = $arrUsers;
             }
         }
 
@@ -713,6 +773,7 @@ class TasksController extends BaseController
 
         $oAppDocument = new DocumentVersion();
         $Fields = $oAppDocument->load ($_GET['a'], $_GET['v'], $_GET['a'], false);
+
         $sAppDocUid = $Fields->getAppDocUid ();
         $sDocUid = $Fields->getDocUid ();
         $oOutputDocument = new OutputDocument();
@@ -741,8 +802,6 @@ class TasksController extends BaseController
         }
 
         $ver = (isset ($_GET['v']) && $_GET['v'] != '') ? '_' . $_GET['v'] : '';
-        $_SESSION['selectedRequest'] = 119;
-
 
 
         if ( !$ver ) //This code is in the case the outputdocument won't be versioned
@@ -761,19 +820,16 @@ class TasksController extends BaseController
         }
         elseif ( file_exists ($realPath1) )
         {
-
             $sw_file_exists = true;
 
             $realPath = $realPath1;
         }
         elseif ( file_exists ($realPath2) )
         {
-
             $sw_file_exists = true;
 
             $realPath = $realPath2;
         }
-
 
         if ( !$sw_file_exists )
         {

@@ -54,16 +54,22 @@ class AttachmentsController extends BaseController
                     "files" => $_FILES);
 
                 $objAttachments = new \BusinessModel\Attachment();
-                $objAttachments->loadObject ($arrData);
+                $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
+                $objAttachments->loadObject ($arrData, $objUser);
             }
         }
     }
 
     public function getAttachmentsAction ($projectId)
     {
+        $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
         $objAttachments = new \BusinessModel\Attachment();
-        $this->view->attachmnets = $objAttachments->getAllAttachments ($projectId);
+
+        $objCases = new \BusinessModel\Cases();
+        $objElements = $objCases->getCaseInfo ($projectId, 1);
+        $this->view->attachmnets = $objCases->getAllUploadedDocumentsCriteria ($objElements, 1, $objUser);
+
         $this->view->writePermission = true;
         $this->view->projectId = $projectId;
     }
@@ -98,13 +104,44 @@ class AttachmentsController extends BaseController
         $this->view->disable ();
         $objInputDocument = new \BusinessModel\Step\InputDocument();
 
-        $objAttachments = new \BusinessModel\Attachment();
-        $objAttachments->setId ($id);
-        $arrAttachment = $objAttachments->getAttachment ();
-        
+        $appDocUid = explode ("_", $id)[0];
+        $documentId = explode ("_", $id)[1];
+
         $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
 
-        $objInputDocument->throwExceptionIfHaventPermissionToDelete($projectUid, $objUser, $arrAttachment);
+        $blCanDelete = $objInputDocument->throwExceptionIfHaventPermissionToDelete ($projectUid, $objUser, $documentId);
+
+        if ( $blCanDelete === false )
+        {
+            throw new Exception ("User doesnt have permission to delete");
+        }
+        
+        $objDownload = new \BusinessModel\Download();
+        $objDownload->removeInputDocument($appDocUid);
+    }
+
+    public function cases_ShowDocumentAction ()
+    {
+        $this->view->disable ();
+
+        if ( empty ($_GET['a']) )
+        {
+            header ('Location: /FormBuilder/errors/error403.php');
+            die ();
+        }
+        if ( empty ($_GET['v']) )
+        {
+            //Load last version of the document
+            $docVersion = (new DocumentVersion())->getLastAppDocVersion ($_GET['a']);
+        }
+        else
+        {
+            $docVersion = $_GET['v'];
+        }
+
+        $objDownload = new \BusinessModel\Download();
+        $objDownload->downloadInputDocument ($_GET['a'], null, $docVersion);
+        die;
     }
 
 }

@@ -25,7 +25,8 @@ class InboxController extends BaseController
         $this->view->arrNotifications = $objNotifications->getNotifications ($arrParameters);
 
         $objLists = new \BusinessModel\Lists();
-        $objLists->loadList ("inbox", array("userId" => $_SESSION['user']['usrid']));
+        $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
+        $objLists->loadList ("inbox", $objUser, array("userId" => $_SESSION['user']['usrid']));
 
         $objUsers = new \BusinessModel\UsersFactory ($_SESSION['user']['usrid']);
         $arrUser = $objUsers->getUsers ();
@@ -62,7 +63,8 @@ class InboxController extends BaseController
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
         $objLists = new \BusinessModel\Lists();
-        $this->view->arrCases = $objLists->loadList ($filter, array("userId" => $_SESSION['user']['usrid'], "page" => $page, "page_limit" => PRODUCTS_PAGE_LIMIT));
+        $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
+        $this->view->arrCases = $objLists->loadList ($filter, $objUser, array("userId" => $_SESSION['user']['usrid'], "page" => $page, "page_limit" => PRODUCTS_PAGE_LIMIT));
         $this->view->pagination = $this->getPagination ("projectsPage");
     }
 
@@ -302,7 +304,7 @@ class InboxController extends BaseController
         }
 
         $objCase = new \BusinessModel\Cases();
-        $objWorkflow = new Workflow($workflowId);
+        $objWorkflow = new Workflow ($workflowId);
         $this->view->html = $objCase->startCase ($objWorkflow);
         $this->view->html .= '<input type="hidden" id="workflowid" name="workflowid" value="' . $workflowId . '">';
     }
@@ -320,8 +322,8 @@ class InboxController extends BaseController
         $objCases = new \BusinessModel\Cases();
         $arrFiles = isset ($_FILES['fileUpload']) ? $_FILES : array();
         $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
-        $objWorkflow = new Workflow($_POST['workflowid']);
-        
+        $objWorkflow = new Workflow ($_POST['workflowid']);
+
         $objCases->addCase ($objWorkflow, $objUser, $_POST, $arrFiles);
     }
 

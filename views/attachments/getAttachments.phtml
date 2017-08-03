@@ -17,17 +17,18 @@
     <div class="col-lg-12 ibox-content attachments-list">
         <?php
         foreach ($attachmnets as $attachmentKey => $attachment) :
+            
             echo '<div class="file-box">
                                         <div class="file">
-                                        <a href="#" id="' . $attachment->getId () . '" class="deleteAttachment">x</a>
-                                            <a href="/FormBuilder/attachments/download/' . $attachment->getId () . '">
+                                        <a href="#" id="' . $attachment['APP_DOC_UID'] . "_" . $attachment['DOC_UID'] . '" class="deleteAttachment">x</a>
+                                            <a href="'  . $attachment['DOWNLOAD_LINK'] . '">
                                                 <div class="icon">
                                                     <i class="fa fa-file"></i>
                                                 </div>
                                                 <div class="file-name">
-                                                   ' . $attachment->getPrfFielname () . '
+                                                   ' . $attachment['APP_DOC_FILENAME'] . '
                                                     <br>
-                                                    <small>Added:' . $attachment->getUsrUid () . ' <br> ' . date ("M d, Y", strtotime ($attachment->getPrfCreateDate ())) . '</small>
+                                                    <small>Added:' . $attachment['CREATED_BY'] . ' <br> ' . date ("M d, Y", strtotime ($attachment['CREATE_DATE'])) . '</small>
                                                 </div>
                                             </a>
                                         </div>
@@ -116,7 +117,7 @@
             url: "/FormBuilder/attachments/deleteAttachment/" + id + "/" + $ ("#projectId").val (),
             success: function (response)
             {
-                alert(response);
+                alert (response);
 
             }
         });

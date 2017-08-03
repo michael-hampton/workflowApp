@@ -33,6 +33,8 @@ if ( isset ($JSON['elements']) )
                 }
             }
         }
+        
+          $name = $arrElements['name'];
     }
 }
 
@@ -63,7 +65,7 @@ if ( isset ($JSON['job']['date_rejected']) )
             <input type="hidden" id="projectId" value="<?= $projectId ?>">
             <h4 class="modal-title">
                 #<?= str_pad ($_SESSION['selectedRequest'], 6, '0', STR_PAD_LEFT) ?>
-<?= $JSON['job']['name'] ?>
+<?= $name ?>
 
             </h4>    
 

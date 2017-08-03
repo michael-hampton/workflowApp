@@ -24,21 +24,22 @@ else
                 User Assignment
             </h2>
             <br><br>
-<?= $message ?>
+            <?= $message ?>
             <br><br>
 
             <center>
 
+
                 <select id="assignusers" class="form-control assignusers" name="form[assignusers]" style="width : 250px;">
-<?php foreach ($users['data'] as $usersKey => $user): ?>
-                        <option value="<?= $user['username'] ?> " style="
+                    <?php foreach ($users as $usersKey => $user): ?>
+                        <option value="<?= $user['aas_username'] ?> " style="
                                 background-repeat: no-repeat;
                                 background-size: 30px auto;
                                 padding: 10px 0 10px 40px;
-                                background-image : url('/FormBuilder/public/img/users/<?= $user['username'] ?>.jpg')" >
-    <?= $user['username'] ?>
+                                background-image : url('/FormBuilder/public/img/users/<?= $user['aas_username'] ?>.jpg')" >
+                                <?= $user['aas_username'] ?>
                         </option>
-                            <?php endforeach; ?>
+                    <?php endforeach; ?>
                 </select><br>
 
                 <button id="Assign" class=" btn btn-primary" style="width:250px  " type="button">Assign</button>
@@ -61,7 +62,7 @@ else
 
         $ ("#finish").hide ();
         $ ("#Save").hide ();
-        $("#testForm").hide();
+        $ ("#testForm").hide ();
 
         $ ("#Assign").off ();
         $ ("#Assign").on ("click", function ()
@@ -70,7 +71,7 @@ else
             console.log ("MoveOn");
             $.ajax ({
                 type: "GET",
-                url: "/FormBuilder/tasks/Assign/" + $ ("#assignusers").val () + "/" + $("#projectId").val(),
+                url: "/FormBuilder/tasks/Assign/" + $ ("#assignusers").val () + "/" + $ ("#projectId").val (),
                 success: function (response)
                 {
 
@@ -91,14 +92,15 @@ else
         });
 
     })
-    
-    function showSweetAlert() {
-            swal({title: "Good job!",
-                text: "I will close in 2 seconds.",   
-                timer: 2000,
-                showConfirmButton: false ,
-                type: "success"
-            });
-        }
+
+    function showSweetAlert ()
+    {
+        swal ({title: "Good job!",
+            text: "I will close in 2 seconds.",
+            timer: 2000,
+            showConfirmButton: false,
+            type: "success"
+        });
+    }
 
 </script>

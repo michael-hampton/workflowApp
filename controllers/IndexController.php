@@ -16,6 +16,8 @@ class IndexController extends BaseController
         $objUser = (new \BusinessModel\UsersFactory())->getUser($_SESSION['user']['usrid']);
 
         $objWorkflow = new Workflow (null, $objSave);
+        
+        //echo $objWorkflow->getProDynaforms();
 
         $objStep = $objWorkflow->getNextStep ();
 
@@ -157,7 +159,7 @@ class IndexController extends BaseController
         $objProjects->setId ($projectId);
         $arrPriorities = $objProjects->doSelect ("priority", array());
         $priorites = array();
-
+        
         foreach ($arrPriorities as $arrPriority) {
             $priorites[$arrPriority['id']]['style'] = $arrPriority['style'];
             $priorites[$arrPriority['id']]['name'] = $arrPriority['name'];
