@@ -17,9 +17,9 @@ $statusId = 7;
 $status = "NEW PROJECT";
 $claimed = "";
 
-if ( isset ($JSON['elements']) )
+if ( isset ($JSON['step_data']['elements']) )
 {
-    foreach ($JSON['elements'] as $arrElements) {
+    foreach ($JSON['step_data']['elements'] as $arrElements) {
         foreach ($arrElements as $arrElement) {
             if ( isset ($arrElement['steps']) && !empty ($arrElement['steps']) )
             {
@@ -38,13 +38,15 @@ if ( isset ($JSON['elements']) )
     }
 }
 
-if ( isset ($JSON['job']['completed_by']) )
+$name = trim($name) === "" ? $JSON['step_data']['job']['name'] : $name;
+
+if ( isset ($JSON['step_data']['job']['completed_by']) )
 {
     $statusId = 3;
     $status = "COMPLETED";
 }
 
-if ( isset ($JSON['job']['date_rejected']) )
+if ( isset ($JSON['step_data']['job']['date_rejected']) )
 {
     $statusId = 4;
     $status = "REJECTED";
@@ -72,10 +74,10 @@ if ( isset ($JSON['job']['date_rejected']) )
             <div style="clear:both; float: left; width: 100%; margin-bottom: 6%;">
                 <span class="<?= $labels[$statusId] ?>"><?= $status ?></span>
 
-                <span class="label <?= $arrPriorities[$JSON['job']['priority']]['style'] ?>"><?= $arrPriorities[$JSON['job']['priority']]['name'] ?></span>
+                <span class="label <?= $arrPriorities[$JSON['step_data']['job']['priority']]['style'] ?>"><?= $arrPriorities[$JSON['step_data']['job']['priority']]['name'] ?></span>
 
                 <div style="width: 100%; float:left;">
-                    <small>Date Added: <?= $JSON['job']['date_created'] ?> Due Date: <?= $JSON['job']['dueDate'] ?></small>
+                    <small>Date Added: <?= $JSON['step_data']['job']['date_created'] ?> Due Date: <?= $JSON['step_data']['job']['dueDate'] ?></small>
                 </div>
 
             </div>

@@ -54,7 +54,7 @@ class Projects extends BaseModel
                         COUNT(c.id) AS commentCount 
                 FROM projects p 
                 INNER JOIN priority pri ON pri.id = p.priority
-                LEFT JOIN attachments a ON a.source_id = p.id
+                  LEFT JOIN app_document a ON a.app_id = p.id
                 INNER JOIN departments d ON d.id = p.department_id
                 LEFT JOIN comments c ON c.source_id = p.id";
 
@@ -105,17 +105,20 @@ class Projects extends BaseModel
 
         //die($this->parms($sql, $arrParameters));
         $arrResultSet = $this->_query ($sql, $arrParameters);
-        
+
         foreach ($arrResultSet as $key => $arrResult) {
-            
-            $stepData = json_decode($arrResult['step_data'], true);
-            
-            $arrWorkflowData = $this->_select("workflow.workflow_data", array(), array("object_id" => $arrResult['id']));
-            
-            $stepData['workflow_data'] = json_decode($arrWorkflowData[0]['workflow_data'], true);
-            $stepData['audit_data'] = json_decode($arrWorkflowData[0]['audit_data'], true);
-            
-            $arrResultSet[$key]['step_data'] = json_encode($stepData);
+
+            $stepData = json_decode ($arrResult['step_data'], true);
+
+            $arrWorkflowData = $this->_select ("workflow.workflow_data", array(), array("object_id" => $arrResult['id']));
+
+            if ( isset ($arrWorkflowData[0]) && !empty ($arrWorkflowData[0]) )
+            {
+                $stepData['workflow_data'] = json_decode ($arrWorkflowData[0]['workflow_data'], true);
+                $stepData['audit_data'] = json_decode ($arrWorkflowData[0]['audit_data'], true);
+            }
+
+            $arrResultSet[$key]['step_data'] = json_encode ($stepData);
         }
 
         return $arrResultSet;

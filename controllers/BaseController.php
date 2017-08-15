@@ -23,7 +23,7 @@ class BaseController extends  \Phalcon\Mvc\Controller {
     {
         $objUsers = new \BusinessModel\UsersFactory();
         $blValid = $objUsers->checkPermission((new \BusinessModel\UsersFactory())->getUser($_SESSION['user']['usrid']), $permission);
-        
+               
        return $blValid;
     }
 }

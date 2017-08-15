@@ -14,6 +14,8 @@ class IndexController extends BaseController
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
         $objSave = new Save ($_SESSION['selectedRequest']);
         $objUser = (new \BusinessModel\UsersFactory())->getUser($_SESSION['user']['usrid']);
+        
+        $workflowId = $objSave->object['workflow_data']['elements'][$projectId]['workflow_id'];
 
         $objWorkflow = new Workflow (null, $objSave);
         
@@ -155,9 +157,8 @@ class IndexController extends BaseController
     public function getProjectAction ($projectId, $openTab = 'project')
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
-        $objProjects = new Projects();
-        $objProjects->setId ($projectId);
-        $arrPriorities = $objProjects->doSelect ("priority", array());
+        $objProjects = new Save($projectId);
+        $arrPriorities = $objProjects->getPriorities();
         $priorites = array();
         
         foreach ($arrPriorities as $arrPriority) {

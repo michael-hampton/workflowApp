@@ -92,13 +92,17 @@ class TasksController extends BaseController
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
         $objProjects = new Save ($projectId);
 
-        $_SESSION['workflow'] = $objProjects->object['workflow_data']['request_id'];
+        $_SESSION['workflow'] = $objProjects->object['workflow_data']['elements'][$projectId]['workflow_id'];
+
+        $objWorkflow = (new Workflow ($_SESSION['workflow']))->load ($_SESSION['workflow']);
+
+        $parentId = $objWorkflow->getParentId () == 0 ? true : false;
 
         $objWorkflowCollection = new WorkflowCollection ($_SESSION['workflow']);
 
         //load workflow engine
 
-        $arrAllWorkflows = $objWorkflowCollection->getMappedWorkflows ();
+        $arrAllWorkflows = $objWorkflowCollection->getMappedWorkflows ($parentId);
 
         $arrAll = array();
 
@@ -413,7 +417,7 @@ class TasksController extends BaseController
         }
 
         if ( isset ($arrConditions['claimStep']) && $arrConditions['claimStep'] == "Yes" &&
-                !isset ($objProject->object['audit_data']['elements'][$id]['steps'][$arrWorkflowData['id']]['claimed']) &&
+                $objProject->object['audit_data']['elements'][$id]['steps'][$arrWorkflowData['id']]['status'] !== "CLAIMED" &&
                 $step >= $currentStepId )
         {
             $arrUsers = (new \BusinessModel\Task())->getTaskAssigneesAll ($workflow, $step, '', 0, 100, "user");
@@ -462,7 +466,7 @@ class TasksController extends BaseController
         if ( isset ($arrConditions["doAllocation"]) && $arrConditions["doAllocation"] == "Yes" )
         {
             //was the stop alredy assigned
-            if ( !empty ($objProject->object['audit_data']['elements'][$id]['steps'][$arrWorkflowData['id']]["claimed"]) )
+            if ( !empty ($objProject->object['audit_data']['elements'][$id]['steps'][$arrWorkflowData['id']]["claimed"]) && $objProject->object['audit_data']['elements'][$id]['steps'][$arrWorkflowData['id']]["status"] === "CLAIMED")
             {
                 //it was
 
@@ -483,7 +487,6 @@ class TasksController extends BaseController
             }
             else
             {
-
                 $arrUsers = (new \BusinessModel\Task())->getTaskAssigneesAll ($workflow, $step, '', 0, 100, "user");
 
                 $hasUser = false;
@@ -512,8 +515,8 @@ class TasksController extends BaseController
 
                     $blHasPermission = false;
                 }
-                
-                 $this->view->users = $arrUsers;
+
+                $this->view->users = $arrUsers;
             }
         }
 

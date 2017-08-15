@@ -319,7 +319,7 @@ class RequestFormatter extends BaseModel
 
         if ( isset ($arrData['requestType']) )
         {
-            $objWorkflowCollectionFactory = new WorkflowCollectionFactory();
+            $objWorkflowCollectionFactory = new \BusinessModel\WorkflowCollectionFactory();
             $result = $objWorkflowCollectionFactory->getCategory ($arrData['requestType']);
             $deptId = $result->getDeptId ();
         }
@@ -345,15 +345,32 @@ class RequestFormatter extends BaseModel
             $data = json_decode ($arrProject['step_data'], true);
 
             $workflowData = $this->_select ("workflow.workflow_data", array(), array("object_id" => $arrProject['id']));
-            $arrWorkflowData = json_decode ($workflowData[0]['workflow_data'], true);
-            $arrAuditData = json_decode ($workflowData[0]['audit_data'], true);
-            $status = $arrWorkflowData['current_step'];
+
+            if ( !isset ($workflowData[0]['workflow_data']) || empty ($workflowData[0]['workflow_data']) )
+            {
+                $intSkipCount++;
+            }
+            else
+            {
+                $arrWorkflowData = json_decode ($workflowData[0]['workflow_data'], true);
+                $arrAuditData = json_decode ($workflowData[0]['audit_data'], true);
+
+                if ( empty ($arrWorkflowData) )
+                {
+                    $intSkipCount++;
+                }
+
+                $arrValues = array_values ($arrWorkflowData['elements']);
+                $parent = array_shift ($arrValues);
+
+                $status = $parent['current_step'];
+            }
 
             $userCount = 0;
 
             /*             * ************************ Assigned Users ************************** */
             $arrUserIds = array();
-            $oCase = new Cases();
+            $oCase = new \BusinessModel\Cases();
 
 
             if ( isset ($data['scheduler']['backlogs']) && !empty ($data['scheduler']['backlogs']) )

@@ -247,13 +247,13 @@ class SchedulerController extends BaseController
             $parentId = $arrRequestTypes[$requestType]['parent_id'];
         }
 
-        echo '<pre>';
-        echo "COLUMNS===============================";
-        print_r ($arrColumns);
-        echo "ALL TEAMS===============================";
-        print_r ($arrAllTeams);
-        echo "TEAMS===============================";
-        print_r ($arrTeams[$requestType]);
+//        echo '<pre>';
+//        echo "COLUMNS===============================";
+//        print_r ($arrColumns);
+//        echo "ALL TEAMS===============================";
+//        print_r ($arrAllTeams);
+//        echo "TEAMS===============================";
+//        print_r ($arrTeams[$requestType]);
         //die;
 
         if ( $requestType === null && $requestType !== "null" )
@@ -264,16 +264,7 @@ class SchedulerController extends BaseController
         else
         {
             $this->view->teams = json_encode ($arrTeams[$requestType]);
-
-            //if ( isset ($parentId) && is_numeric ($parentId) )
-            // {
-            //$this->view->columns = json_encode ($arrColumns[$parentId]);
-            //}
-            //else
-            //{
-            //die("Here");
             $this->view->columns = json_encode ($arrColumns[$requestType]);
-            //}
         }
 
         $this->view->arrColumns = $arrColumns;
