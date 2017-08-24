@@ -342,16 +342,34 @@ class SchedulerController extends BaseController
 
     public function getTaskAction ()
     {
-        $this->view->disable ();
+        $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
+        $objCase = (new \BusinessModel\Cases())->getCaseInfo ($_POST['id'], 1);
 
-        if ( isset ($_POST['userid']) && is_numeric ($_POST['userid']) )
-        {
-            
+        $workflowId = $objCase->getWorkflow_id ();
+        $this->view->workflowId = $workflowId;
+
+        $objCaseTracker = new \BusinessModel\CaseTracker();
+        $arrObjects = $objCaseTracker->getCaseTrackerObjects ($workflowId);
+        $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
+        $objWorkflow = new Workflow (null, $objCase);
+        $objStep = $objWorkflow->getNextStep ();
+        $this->view->projectId = $_POST['id'];
+        
+        $this->view->arrAudit = $objCase->getAudit()['elements'][1];
+        
+        $this->view->arrCaseTracker = (new \BusinessModel\CaseTracker())->getCaseTracker($workflowId);
+
+        foreach ($arrObjects as $arrObject) {
+            if ( $arrObject['cto_type_obj'] === "DYNAFORM" )
+            {
+                $objForm = new \BusinessModel\Form();
+                $this->view->html = $objForm->buildFormForStep ($objStep, $objUser, $_POST['id']);
+            }
         }
 
-        $objRequestFormatter = new RequestFormatter ($_POST['id']);
-        $data = $objRequestFormatter->formatKanbanData ($_POST, "task");
-        echo json_encode ($data);
+        $this->view->arrObjects = $arrObjects;
+        
+        $this->view->arrMessages = (new \BusinessModel\NotificationsFactory())->getNotifications (array("parent_id" => $_POST['id']), 100, 0, "ns.date_sent", "DESC");
     }
 
     public function saveCommentsAction ()
