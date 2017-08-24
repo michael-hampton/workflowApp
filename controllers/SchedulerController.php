@@ -354,21 +354,37 @@ class SchedulerController extends BaseController
         $objWorkflow = new Workflow (null, $objCase);
         $objStep = $objWorkflow->getNextStep ();
         $this->view->projectId = $_POST['id'];
+
+        $this->view->arrAudit = $objCase->getAudit ()['elements'][1];
+
+        $this->view->arrCaseTracker = (new \BusinessModel\CaseTracker())->getCaseTracker ($workflowId);
         
-        $this->view->arrAudit = $objCase->getAudit()['elements'][1];
+        $objAttachments = new \BusinessModel\Attachment();
         
-        $this->view->arrCaseTracker = (new \BusinessModel\CaseTracker())->getCaseTracker($workflowId);
+        $arrAttachment = [];
 
         foreach ($arrObjects as $arrObject) {
-            if ( $arrObject['cto_type_obj'] === "DYNAFORM" )
-            {
-                $objForm = new \BusinessModel\Form();
-                $this->view->html = $objForm->buildFormForStep ($objStep, $objUser, $_POST['id']);
+
+            switch ($arrObject['cto_type_obj']) {
+                case "DYNAFORM":
+                    $objForm = new \BusinessModel\Form();
+                    $this->view->html = $objForm->buildFormForStep ($objStep, $objUser, $_POST['id']);
+                    break;
+                
+                case "INPUT_DOCUMENT":
+                    $arrAttachment['INPUT'] = $objAttachments->getDocumentsByType($arrObject['cto_uid_obj'], "INPUT");
+                break;    
+            
+                case "OUTPUT_DOCUMENT":
+                    $arrAttachment['OUTPUT'] = $objAttachments->getDocumentsByType($arrObject['cto_uid_obj'], "OUTPUT");
+                break;    
             }
         }
+        
+        $this->view->arrAttachments = $arrAttachment;
 
         $this->view->arrObjects = $arrObjects;
-        
+
         $this->view->arrMessages = (new \BusinessModel\NotificationsFactory())->getNotifications (array("parent_id" => $_POST['id']), 100, 0, "ns.date_sent", "DESC");
     }
 

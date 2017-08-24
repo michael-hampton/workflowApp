@@ -39,29 +39,34 @@
                                 <h2>Input</h2>
 
                                 <?php
-                                foreach ($arrObjects as $arrObject):
-                                    if ( $arrObject['cto_type_obj'] === "INPUT_DOCUMENT" )
-                                    {
-                                        echo '<div class="file-box">
-                                <div class="file">
-                                    <a href="#">
+                                if ( isset ($arrAttachments['INPUT']) && !empty ($arrAttachments['INPUT']) )
+                                {
+                                    foreach ($arrAttachments['INPUT'] as $arrObject):
+                                        if ( $arrObject['status'] !== "DELETED" )
+                                        {
+                                            echo '<div class="file-box">
+                                 <a href="' . str_replace("C:/xampp/htdocs", "", $arrObject['path']) . '">
+                                 <div class="file">
+                                   
                                         <span class="corner"></span>
 
                                         <div class="icon">
                                             <i class="fa fa-file"></i>
                                         </div>
                                         <div class="file-name">
-                                            ' . $arrObject['obj_title'] . '
+                                            ' . $arrObject['filename'] . '
                                             <br>
-                                            <small>Added: Jan 11, 2014</small>
+                                            <small>Added: ' . $arrObject['date_created'] . '</small>
                                         </div>
-                                    </a>
+                                    
                                 </div>
+                                </a>
 
                             </div>';
-                                    }
+                                        }
 
-                                endforeach;
+                                    endforeach;
+                                }
                                 ?>
                             </div>
                         </div>
@@ -70,29 +75,34 @@
                                 <h2>Output</h2>
 
                                 <?php
-                                foreach ($arrObjects as $arrObject):
-                                    if ( $arrObject['cto_type_obj'] === "OUTPUT_DOCUMENT" )
-                                    {
-                                        echo '<div class="file-box">
-                                <div class="file">
-                                    <a href="#">
+                                if ( isset ($arrAttachments['OUTPUT']) && !empty ($arrAttachments['OUTPUT']) )
+                                {
+                                    foreach ($arrAttachments['OUTPUT'] as $arrObject):
+                                        if ( $arrObject['status'] !== "DELETED" )
+                                        {
+                                            echo '<div class="file-box">
+                                 <a href="' . str_replace("C:/xampp/htdocs", "", $arrObject['path']) . '">
+                                 <div class="file">
+                                   
                                         <span class="corner"></span>
 
                                         <div class="icon">
                                             <i class="fa fa-file"></i>
                                         </div>
                                         <div class="file-name">
-                                            ' . $arrObject['obj_title'] . '
+                                            ' . $arrObject['filename'] . '
                                             <br>
-                                            <small>Added: Jan 11, 2014</small>
+                                            <small>Added: ' . $arrObject['date_created'] . '</small>
                                         </div>
-                                    </a>
+                                    
                                 </div>
+                                </a>
 
                             </div>';
-                                    }
+                                        }
 
-                                endforeach;
+                                    endforeach;
+                                }
                                 ?>
                             </div>
                         </div>
@@ -140,7 +150,7 @@
                             <div class="panel-body">
                                 <div class="table-responsive">
                                     <table class="table table-striped table-hover">
-                                        
+
                                         <thead>
                                         <th>User</th>
                                         <th>Date Started</th>
@@ -149,7 +159,7 @@
                                         <th>Date Completed</th>
                                         <th>Step</th>
                                         </thead>
-                                        
+
                                         <tbody>
                                             <?php
                                             //if ( $arrMessages[0]['project']->getWorkflow_id () === $workflowId )
