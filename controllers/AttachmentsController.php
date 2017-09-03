@@ -1,61 +1,52 @@
 <?php
-
 use Phalcon\Mvc\View;
 
 class AttachmentsController extends BaseController
 {
-
     public function uploadAttachedFileAction ($projectId)
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
         $objAttachments = new \BusinessModel\Attachment();
 
-        // Check if image file is a actual image or fake image
-        if ( isset ($_FILES["file"]) && !empty ($_FILES["file"]["name"]) )
-        {
-            $target_dir = $_SERVER['DOCUMENT_ROOT'] . "/FormBuilder/public/uploads/";
-            $target_file = $target_dir . basename ($_FILES["file"]["name"]);
-            $uploadOk = 1;
-            $imageFileType = pathinfo ($target_file, PATHINFO_EXTENSION);
+        foreach ($_FILES['file']['name'] as $key => $arrFile) {
 
-            // Check file size
-            if ( $_FILES["file"]["size"] > 5000000 )
+            // Check if image file is a actual image or fake image
+            if ( isset ($_FILES["file"]['name'][$key]) && !empty ($_FILES["file"]["name"][$key]) )
             {
-                die ("2");
-                echo "Sorry, your file is too large.";
-                $uploadOk = 0;
-            }
+                $target_dir = $_SERVER['DOCUMENT_ROOT'] . "/FormBuilder/public/uploads/";
+                $target_file = $target_dir . basename ($_FILES["file"]["name"][$key]);
+                $uploadOk = 1;
+                $imageFileType = pathinfo ($target_file, PATHINFO_EXTENSION);
 
-            /* $arrAllowed = array("csv", "jpg", "png", "doc", "pdf", "jpeg", "gif");
+                // Check file size
+                if ( $_FILES["file"]["size"][$key] > 5000000 )
+                {
+                    echo "Sorry, your file is too large.";
+                    $uploadOk = 0;
+                }
 
-              if ( !in_array ($imageFileType, $arrAllowed) )
-              {
-              die ("1");
-              echo "Sorry, only JPG, JPEG, PNG & GIF files are allowed.";
-              $uploadOk = 0;
-              } */
+                // Check if $uploadOk is set to 0 by an error
+                if ( $uploadOk == 0 )
+                {
+                    echo "Sorry, your file was not uploaded.";
+                    // if everything is ok, try to upload file
+                }
+                else
+                {
+                    $fileName = $_FILES['file']['name'][$key];
+                    $fileContents = file_get_contents ($_FILES['file']['tmp_name'][$key]);
 
-            // Check if $uploadOk is set to 0 by an error
-            if ( $uploadOk == 0 )
-            {
-                echo "Sorry, your file was not uploaded.";
-                // if everything is ok, try to upload file
-            }
-            else
-            {
-                $fileName = $_FILES['file']['name'];
-                $fileContents = file_get_contents ($_FILES['file']['tmp_name']);
+                    $arrData = array(
+                        "source_id" => $projectId,
+                        "filename" => $fileName,
+                        "date_uploaded" => date ("Y-m-d H:i:s"),
+                        "uploaded_by" => $_SESSION['user']['username'],
+                        "files" => $_FILES);
 
-                $arrData = array(
-                    "source_id" => $projectId,
-                    "filename" => $fileName,
-                    "date_uploaded" => date ("Y-m-d H:i:s"),
-                    "uploaded_by" => $_SESSION['user']['username'],
-                    "files" => $_FILES);
-
-                $objAttachments = new \BusinessModel\Attachment();
-                $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
-                $objAttachments->loadObject ($arrData, $objUser);
+                    $objAttachments = new \BusinessModel\Attachment();
+                    $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
+                    $objAttachments->loadObject ($arrData, $objUser);
+                }
             }
         }
     }
@@ -115,14 +106,14 @@ class AttachmentsController extends BaseController
         {
             throw new Exception ("User doesnt have permission to delete");
         }
-        
+
         $objDownload = new \BusinessModel\Download();
-        $objDownload->removeInputDocument($appDocUid);
+        $objDownload->removeInputDocument ($appDocUid);
     }
 
     public function cases_ShowDocumentAction ()
     {
-        $this->view->disable ();
+        $this->view->setRenderLevel(\Phalcon\Mvc\View::LEVEL_NO_RENDER);
 
         if ( empty ($_GET['a']) )
         {
@@ -140,8 +131,28 @@ class AttachmentsController extends BaseController
         }
 
         $objDownload = new \BusinessModel\Download();
-        $objDownload->downloadInputDocument ($_GET['a'], null, $docVersion);
-        die;
-    }
+        $arrData = $objDownload->downloadInputDocument ($_GET['a'], null, $docVersion);
+        $filename = $arrData['filename'];
+        $mimeType = $arrData['mimeType'];
+        $realPath = $arrData['realPath'];
+        
+        header ('Pragma: public');
+        header ('Expires: -1');
+        header ('Cache-Control: public, must-revalidate, post-check=0, pre-check=0');
+        header ('Content-Transfer-Encoding: binary');
+        header ("Content-Disposition: attachment; filename=\"$filename\"");
+        header ("Content-Length: " . filesize ($arrData['realPath']));
+        header ("Content-Type: $mimeType");
+        header ("Content-Description: File Transfer");
 
+        if ( $fp = fopen ($arrData['realPath'], 'rb') )
+        {
+            ob_end_clean ();
+            while (!feof ($fp) and ( connection_status () == 0)) {
+                print_r(fread ($fp, 8192));
+                flush ();
+            }
+            @fclose ($fp);
+        }
+    }
 }

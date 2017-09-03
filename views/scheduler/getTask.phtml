@@ -127,9 +127,9 @@
                                                 {
                                                     ?>
                                                     <tr>
-                                                        <td class="mail-ontact"><a href="mail_detail.html"><?= $arrNotification['notifications']->getDateSent () ?></a></td>
-                                                        <td><?= $arrNotification['notifications']->getFrom () ?></td>
-                                                        <td class="mail-ontact"><a href="mail_detail.html"><?= $arrNotification['notifications']->getSubject () ?></a></td>
+                                                        <td class="mail-ontact"><a href="mail_detail.html"><?= $arrNotification['notifications']->getAppMsgSendDate () ?></a></td>
+                                                        <td><?= $arrNotification['notifications']->getAppMsgFrom () ?></td>
+                                                        <td class="mail-ontact"><a href="mail_detail.html"><?= $arrNotification['notifications']->getAppMsgSubject () ?></a></td>
                                                         <td class=""><?= $arrNotification['project']->getCurrent_step () ?></td>
                                                     </tr>
 

@@ -1,45 +1,82 @@
 <br>
 <center>
-<i style="font-size: 72px; color : #ed5565" class=" fa fa-exclamation-triangle"></i>
+    <i style="font-size: 72px; color : #ed5565" class=" fa fa-exclamation-triangle"></i>
 </center>
 
 <div class="row">
     <p>
-	
-        <div class="col-md-10 col-md-offset-1">
-            <h3 style="line-height: 23px;">
-                This request has been rejected due to inappropriate form content.<br>
-                Some elements did not meet the requirements. See the elements below.
-                <br><br>
-		You have got 2 options.
-	
-            </h3>
-	</div>	
-	
+
+    <div class="col-md-10 col-md-offset-1">
+        <h3 style="line-height: 23px;">
+            This request has been rejected due to inappropriate form content.<br>
+            Some elements did not meet the requirements. See the elements below.
+            <br><br>
+            You have got 2 options.
+
+        </h3>
+    </div>	
+
     <p>
 </div>
 <br>
 
 <div class="row">
     <div class="col-md-10 col-md-offset-1">
-	<ul style="list-style: inside none disc;">
+        <ul style="list-style: inside none disc;">
             <li>Hold. </li>
             <li>Complete Request.</li>
-	</ul>
+        </ul>
     </div>	
-<br>	
+    <br>	
 </div>
 <br>
 
+<div class="row">
+    <div class="col-lg-12 pull-left">
+        <form class="form-horizontal" id="holdForm" name="holdForm">
+            <div class="form-group">
+                <label class="col-lg-2 control-label">Unpause Date</label>
+
+                <div class="col-lg-10">
+                    <input type="text" id="unpauseDate" name="unpauseDate" placeholder="Date" class="form-control">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-lg-2 control-label">Unpause Time</label>
+
+                <div class="col-lg-10">
+                    <select name="unpauseTime" class="form-control">
+                        <?php
+                        for ($hours = 0; $hours < 24; $hours++) { // the interval for hours is '1'
+                            for ($mins = 0; $mins < 60; $mins+=30) { // the interval for mins is '30'
+                                echo '<option>' . str_pad ($hours, 2, '0', STR_PAD_LEFT) . ':'
+                                . str_pad ($mins, 2, '0', STR_PAD_LEFT) . '</option>';
+                            }
+                        }
+                        ?>
+
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-lg-2 control-label">Reason</label>
+
+                <div class="col-lg-10">
+                    <textarea name="pauseReason" class="form-control"></textarea>
+                </div>
+        </form>
+    </div>
+</div>
+
 <center>
     <div class="col-md-10 col-md-offset-1">
-	<div class="col-md-4">
+        <div class="col-md-4">
             <button id="Hold" class=" btn btn-w-m btn-danger" style="width:90% " type="button">Hold</button>
-	</div>
-	
-	<div class="col-md-4">
+        </div>
+
+        <div class="col-md-4">
             <button id="MoveOn" class=" btn btn-primary" style="width:90%  " type="button">Complete</button>
-	</div>
+        </div>
     </div>
 </center>
 <br>
@@ -53,11 +90,21 @@
     width: 80%;">
 <script>
 
-	$(document).ready(function(){
-	
-		$("#finish").hide();
-		$("#Save").hide();
-	
-	})
-	
+    $ (document).ready (function ()
+    {
+
+        $ ("#finish").hide ();
+        $ ("#Save").hide ();
+
+        $ ('#unpauseDate').datepicker ({
+            todayBtn: "linked",
+            keyboardNavigation: false,
+            forceParse: false,
+            calendarWeeks: true,
+            autoclose: true
+        });
+
+
+    })
+
 </script>

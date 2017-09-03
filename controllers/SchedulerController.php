@@ -385,7 +385,7 @@ class SchedulerController extends BaseController
 
         $this->view->arrObjects = $arrObjects;
 
-        $this->view->arrMessages = (new \BusinessModel\NotificationsFactory())->getNotifications (array("parent_id" => $_POST['id']), 100, 0, "ns.date_sent", "DESC");
+        $this->view->arrMessages = (new \BusinessModel\NotificationsFactory())->getNotifications (array("parent_id" => $_POST['id']), 100, 0);
     }
 
     public function saveCommentsAction ()

@@ -74,7 +74,8 @@ class TasksController extends BaseController
         $objElements = new Elements ($_SESSION['selectedRequest'], $id);
         $objCases = new \BusinessModel\Cases();
         $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
-        $objCases->updateStatus ($objElements, $objUser, "HELD");
+
+        $objCases->pauseCase ($objElements, $objUser, $_POST);
     }
 
     public function rejectAction ($workflow, $id)
@@ -466,7 +467,7 @@ class TasksController extends BaseController
         if ( isset ($arrConditions["doAllocation"]) && $arrConditions["doAllocation"] == "Yes" )
         {
             //was the stop alredy assigned
-            if ( !empty ($objProject->object['audit_data']['elements'][$id]['steps'][$arrWorkflowData['id']]["claimed"]) && $objProject->object['audit_data']['elements'][$id]['steps'][$arrWorkflowData['id']]["status"] === "CLAIMED")
+            if ( !empty ($objProject->object['audit_data']['elements'][$id]['steps'][$arrWorkflowData['id']]["claimed"]) && $objProject->object['audit_data']['elements'][$id]['steps'][$arrWorkflowData['id']]["status"] === "CLAIMED" )
             {
                 //it was
 

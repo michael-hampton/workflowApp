@@ -34,7 +34,7 @@ class InboxController extends BaseController
         $this->view->arrCounters = $objLists->getCounters ($arrUser[0]);
     }
 
-    public function searchMessagesAction ($status, $page = 0, $strOrderBy = "ns.date_sent", $strOrderDir = "DESC")
+    public function searchMessagesAction ($status, $page = 0, $strOrderBy = "ns.APP_MSG_SEND_DATE", $strOrderDir = "DESC")
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
 
@@ -47,8 +47,15 @@ class InboxController extends BaseController
         $objNotifications = new \BusinessModel\NotificationsFactory();
 
         $isImportant = $status == 8 ? 1 : 0;
+        $status = $isImportant === 1 ? null : $status;
+        
 
         $arrParameters = array("user" => $_SESSION['user']['user_email'], "status" => $status, "is_important" => $isImportant);
+        
+        if((int)$status === 2) {
+            $arrParameters['has_read'] = 1;
+            $arrParameters['status'] = null;
+        }
 
         if ( isset ($_POST['searchText']) && !empty ($_POST['searchText']) )
         {
@@ -71,23 +78,23 @@ class InboxController extends BaseController
     public function updateStatusAction ($status)
     {
         $this->view->disable ();
-        $objNotifications = new Notifications();
+        $objNotifications = new Notification();
         $arrUpdate = [];
 
         switch ($status) {
             case 4:
-                $arrUpdate['status'] = 4;
+                $arrUpdate['APP_MSG_SHOW_MESSAGE'] = 4;
                 // trash
                 break;
 
             case 5:
                 // read
-                $arrUpdate['has_read'] = 1;
+                $arrUpdate['HAS_READ'] = 1;
                 break;
 
             case 6:
                 // important
-                $arrUpdate['is_important'] = 1;
+                $arrUpdate['IS_IMPORTANT'] = 1;
                 break;
         }
 

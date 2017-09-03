@@ -2,7 +2,8 @@
     <?= $pagination ?>
 </div>
 
-<?php if(empty($arrNotifications)) echo '<center><h2>No Notifications could be found.</h2><center>';
+<?php if ( empty ($arrNotifications) )
+    echo '<center><h2>No Notifications could be found.</h2><center>';
 ?>
 
 <table class="table table-hover table-mail">
@@ -10,12 +11,12 @@
     <thead>
         <tr>
             <th></th>
-             <th>Case Id</th>
+            <th>Case Id</th>
             <th>Case Name</th>
             <th>Subject</th>
             <th>Step</th>
-             <th>Process</th>
-              <th>Due Date</th>
+            <th>Process</th>
+            <th>Due Date</th>
 <!--            <th>Date Sent</th>-->
         </tr>
     </thead>
@@ -23,26 +24,29 @@
     <tbody>
 
         <?php
+        
         foreach ($arrNotifications as $key => $arrNotification):
+            if ( is_object ($arrNotifications[$key]['project']) ):
 
-            $class = $arrNotification['notifications']->getHasRead () == 0 ? 'unread' : 'read';
-            ?>
+                $class = $arrNotification['notifications']->getHasRead () == 0 ? 'unread' : 'read';
+                ?>
 
-            <tr class="<?= $class ?> mailItem">
-                <td id="<?= $arrNotification['notifications']->getId () ?>" class="check-mail">
-                    <input type="checkbox" class="i-checks">
-                </td>
-                <td class=""><?= $arrNotification['project']->getId () ?></td>
-                <td class="mail-subject"><a href="mail_detail.html"><?= $arrNotifications[$key]['project']->getName () ?></a></td>
-                <td class="mail-ontact"><a href="mail_detail.html"><?= $arrNotification['notifications']->getSubject () ?></a></td>
-                <td class=""><?= $arrNotification['project']->getCurrent_step () ?></td>
-                <td class=""><?= $arrNotification['project']->getWorkflowName () ?></td>
+                <tr class="<?= $class ?> mailItem">
+                    <td id="<?= $arrNotification['notifications']->getAppMsgUid () ?>" class="check-mail">
+                        <input type="checkbox" class="i-checks">
+                    </td>
+                    <td class=""><?= $arrNotification['project']->getId () ?></td>
+                    <td class="mail-subject"><a href="mail_detail.html"><?= $arrNotifications[$key]['project']->getName () ?></a></td>
+                    <td class="mail-ontact"><a href="mail_detail.html"><?= $arrNotification['notifications']->getAppMsgSubject () ?></a></td>
+                    <td class=""><?= $arrNotification['project']->getCurrent_step () ?></td>
+                    <td class=""><?= $arrNotification['project']->getWorkflowName () ?></td>
 
-<!--                <td class="text-right mail-date"><?= $arrNotification['notifications']->getDateSent () ?></td>-->
-                 <td class=""><?= $arrNotification['project']->getDueDate () ?></td>
-            </tr>
+        <!--                <td class="text-right mail-date"><?= $arrNotification['notifications']->getAppMsgSendDate () ?></td>-->
+                    <td class=""><?= $arrNotification['project']->getDueDate () ?></td>
+                </tr>
 
-            <?php
+                <?php
+            endif;
         endforeach;
         ?>
 

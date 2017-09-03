@@ -13,12 +13,12 @@ class IndexController extends BaseController
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
         $objSave = new Save ($_SESSION['selectedRequest']);
-        $objUser = (new \BusinessModel\UsersFactory())->getUser($_SESSION['user']['usrid']);
-        
+        $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
+
         $workflowId = $objSave->object['workflow_data']['elements'][$projectId]['workflow_id'];
 
         $objWorkflow = new Workflow (null, $objSave);
-        
+
         //echo $objWorkflow->getProDynaforms();
 
         $objStep = $objWorkflow->getNextStep ();
@@ -82,7 +82,7 @@ class IndexController extends BaseController
         $this->view->disable ();
         $objSave = new Save ($projectId);
         $arrData = array();
-        
+
         $status = '';
 
         $arrErrors = array();
@@ -140,8 +140,8 @@ class IndexController extends BaseController
         $arrData['name'] = $objSave->object['step_data']['job']['name'];
         $arrData['priority'] = $objSave->object['step_data']['job']['priority'];
         $arrData['dueDate'] = $objSave->object['step_data']['job']['dueDate'];
-        
-        $objUser = (new \BusinessModel\UsersFactory())->getUser($_SESSION['user']['usrid']);
+
+        $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
 
         $objStep = new WorkflowStep (null, $objSave);
         $objStep->save ($objSave, $arrData, $objUser);
@@ -149,18 +149,17 @@ class IndexController extends BaseController
             "dateCompleted" => date ("Y-m-d H:i:s"),
             "status" => $status,
             "claimed" => $_SESSION['user']['username']
-                ),
-                $objUser
+                ), $objUser
         );
     }
 
     public function getProjectAction ($projectId, $openTab = 'project')
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
-        $objProjects = new Save($projectId);
-        $arrPriorities = $objProjects->getPriorities();
+        $objProjects = new Save ($projectId);
+        $arrPriorities = $objProjects->getPriorities ();
         $priorites = array();
-        
+
         foreach ($arrPriorities as $arrPriority) {
             $priorites[$arrPriority['id']]['style'] = $arrPriority['style'];
             $priorites[$arrPriority['id']]['name'] = $arrPriority['name'];
@@ -191,6 +190,15 @@ class IndexController extends BaseController
             $statusId = 4;
             $this->view->blComplete = false;
         }
+    }
+
+    public function getAuditAction ($projectId, $caseId = 1)
+    {
+        $this->view->disable ();
+        $objHistry = new Audit();
+        $arrHistory = $objHistry->getHistory ($projectId, $caseId);
+        
+        echo $arrHistory['FIELDS'];
     }
 
 }
