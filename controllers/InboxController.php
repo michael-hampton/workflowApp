@@ -48,11 +48,12 @@ class InboxController extends BaseController
 
         $isImportant = $status == 8 ? 1 : 0;
         $status = $isImportant === 1 ? null : $status;
-        
+
 
         $arrParameters = array("user" => $_SESSION['user']['user_email'], "status" => $status, "is_important" => $isImportant);
-        
-        if((int)$status === 2) {
+
+        if ( (int) $status === 2 )
+        {
             $arrParameters['has_read'] = 1;
             $arrParameters['status'] = null;
         }
@@ -62,17 +63,25 @@ class InboxController extends BaseController
             $arrParameters['searchText'] = $_POST['searchText'];
         }
 
-        $this->view->arrNotifications = $objNotifications->getNotifications ($arrParameters, PRODUCTS_PAGE_LIMIT, $page, $strOrderBy, $strOrderDir);
-        $this->view->pagination = $this->getPagination ();
+        $arrNotifications = $objNotifications->getNotifications ($arrParameters, PRODUCTS_PAGE_LIMIT, $page, $strOrderBy, $strOrderDir);
+
+        $this->view->pagination = $this->getPagination ("jumpToPage", $arrNotifications['counts']);
+        unset ($arrNotifications['counts']);
+
+        $this->view->arrNotifications = $arrNotifications;
     }
 
     public function filterProjectsAction ($filter, $page)
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
+
         $objLists = new \BusinessModel\Lists();
         $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
+
         $this->view->arrCases = $objLists->loadList ($filter, $objUser, array("userId" => $_SESSION['user']['usrid'], "page" => $page, "page_limit" => PRODUCTS_PAGE_LIMIT));
-        $this->view->pagination = $this->getPagination ("projectsPage");
+        
+        
+        $this->view->pagination = $this->getPagination ("projectsPage", $this->view->arrCases['count']);
     }
 
     public function updateStatusAction ($status)
@@ -134,127 +143,6 @@ class InboxController extends BaseController
         $objNotifications->saveNewMessage ();
     }
 
-    public function getPagination ($strFunction = "jumpToPage")
-    {
-
-        /*         * ************************************************************************* */
-        /*                      PAGINGATION BEGIN
-         * *************************************************************************** */
-
-        $currentPageorders = $_SESSION["pagination"]["total_counter"] - (PRODUCTS_PAGE_LIMIT * $_SESSION["pagination"]["current_page"]);
-        if ( $currentPageorders > PRODUCTS_PAGE_LIMIT )
-            $currentPageorders = PRODUCTS_PAGE_LIMIT;
-
-        $html_pagination = "<ul class=\"pagination pull-right\">";
-
-        $html_pagination .= "<li onclick=\"" . $strFunction . "(0)\" class=\"footable-page-arrow\">
-            <a data-page=\"first\" href=\"#first\">«</a>
-        </li>";
-
-        if ( $_SESSION["pagination"]["current_page"] > 0 )
-        {
-
-            $html_pagination .= "<li onclick=\"" . $strFunction . "(" . ($_SESSION["pagination"]["current_page"] - 1) . ")\" class=\"footable-page-arrow\">
-                <a data-page=\"prev\" href=\"#prev\">‹</a>
-            </li>";
-        }
-        else
-        {
-            $html_pagination .= "<li class=\"footable-page-arrow disabled\">
-                <a data-page=\"prev\" href=\"#prev\">«</a>
-            </li>";
-        }
-
-        //$html_pagination .= "<div style=\" float: left; width: 81%; \">&nbsp;";
-        if ( $_SESSION["pagination"]["total_pages"] < 10 )
-        {
-            for ($i = 0; $i <= $_SESSION["pagination"]["total_pages"] - 1; $i++) {
-
-                if ( $i == $_SESSION["pagination"]["current_page"] )
-                {
-                    $class = "active";
-                }
-                else
-                {
-                    $class = "";
-                }
-
-                $html_pagination .= "<li class=\"footable-page " . $class . "\" onclick=\"" . $strFunction . "(" . $i . ")\">
-                    <a data-page=\"1\" href=\"#\">" . ($i + 1) . "</a>
-                 </li>";
-            }
-        }
-        else
-        {
-
-            /* pages more then 11 */
-
-            if ( $_SESSION["pagination"]["current_page"] <= 5 )
-            {
-                $intStartWidth = 0;
-                $endStartWidth = 9;
-                //echo "stage 2";
-            }
-
-            if ( $_SESSION["pagination"]["current_page"] > 5 )
-            {
-                $intStartWidth = $_SESSION["pagination"]["current_page"] - 5;
-                $endStartWidth = $_SESSION["pagination"]["current_page"] + 5;
-                //echo "stage 3";
-            }
-
-            if ( ($_SESSION["pagination"]["current_page"] + 5) >= $_SESSION["pagination"]["total_pages"] )
-            {
-                $intStartWidth = $_SESSION["pagination"]["total_pages"] - 10;
-                $endStartWidth = $_SESSION["pagination"]["total_pages"] - 1;
-                //echo "stage 4";
-            }
-
-            for ($i = $intStartWidth; $i <= $endStartWidth; $i++) {
-
-                if ( $i == $_SESSION["pagination"]["current_page"] )
-                {
-                    $class = 'active';
-                }
-                else
-                {
-                    $class = '';
-                }
-
-                $html_pagination .= "<li class=\"footable-page " . $class . "\" onclick=\"" . $strFunction . "(" . $i . ")\">
-                    <a data-page=\"1\" href=\"#\">" . ($i + 1) . "</a>
-                 </li>";
-            }
-        }
-
-        //$html_pagination.=  " <div style=\"float: left; margin-top: 7px; width: 50px;\" > <img style=\" display:none;\" id=\"ajax-loader-pic\" alt=\"loading\" src=\"/images/ajax-loader.gif\"></div>";
-
-        if ( ($_SESSION["pagination"]["current_page"] + 1) < $_SESSION["pagination"]["total_pages"] )
-        {
-
-            $html_pagination .= "<li class=\"footable-page\" onclick=\"" . $strFunction . "(" . ($_SESSION["pagination"]["current_page"] + 1) . ")\">
-                    <a data-page=\"1\" href=\"#\">›</a>
-                 </li>";
-        }
-        else
-        {
-
-            $html_pagination .= "<li class=\"footable-page disabled\">
-                    <a data-page=\"1\" href=\"#\">›</a>
-                 </li>";
-        }
-
-        $html_pagination .= "<li class=\"footable-page-arrow\" onclick=\"" . $strFunction . "(" . ($_SESSION["pagination"]["total_pages"] - 1) . ")\">
-           <a data-page=\"last\" href=\"#last\">»</a>
-        </li>";
-
-        $html_pagination .= "</ul>";
-
-        $htmlResult = $html_pagination;
-
-        return $htmlResult;
-    }
-
     public function addCaseAction ($page = 0)
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
@@ -273,7 +161,7 @@ class InboxController extends BaseController
         $teamId = $objUser->getTeam_id ();
         $userId = $objUser->getUserId ();
 
-        foreach ($arrWorkflows as $key => $objWorkflow) {
+        foreach ($arrWorkflows['data'] as $key => $objWorkflow) {
 
             $blHasPermission = false;
 
@@ -296,8 +184,8 @@ class InboxController extends BaseController
             }
         }
 
-        $this->view->arrWorkflows = $arrWorkflows;
-        $this->view->pagination = $this->getPagination ("processPagination");
+        $this->view->arrWorkflows = $arrWorkflows['data'];
+        $this->view->pagination = $this->getPagination ("processPagination", $arrWorkflows['count']);
     }
 
     public function addNewCaseAction ($workflowId)
@@ -400,7 +288,7 @@ class InboxController extends BaseController
         $teamId = $objUser->getTeam_id ();
         $userId = $objUser->getUserId ();
 
-        foreach ($arrWorkflows as $key => $objWorkflow) {
+        foreach ($arrWorkflows['data'] as $key => $objWorkflow) {
 
             $blHasPermission = false;
 
@@ -423,11 +311,11 @@ class InboxController extends BaseController
             }
         }
 
-        $this->view->arrWorkflows = $arrWorkflows;
+        $this->view->arrWorkflows = $arrWorkflows['data'];
 
         //$arrayWhere = null, $sortField = null, $sortDir = null, $start = null, $limit = null
         $objUsers = new \BusinessModel\UsersFactory();
-        $this->view->arrUsers = $objUsers->getUsers (array(), "u.username", "ASC", 0, 25);
+        $this->view->arrUsers = $objUsers->getUsers (array(), "u.username", "ASC", 0, PRODUCTS_PAGE_LIMIT);
     }
 
     public function searchCasesAction ($page, $orderBy, $orderDir)
@@ -454,13 +342,13 @@ class InboxController extends BaseController
                     "process" => $process,
                     "category" => $category,
                     "limit" => PRODUCTS_PAGE_LIMIT,
-                    "start" => 0,
+                    "start" => $page,
                     "userId" => $_SESSION['user']['username'],
                     "action" => "search"
                 )
         );
 
-        $this->view->pagination = $this->getPagination ("casePagination");
+        $this->view->pagination = $this->getPagination ("casePagination", $this->view->arrLists['count']);
     }
 
 }

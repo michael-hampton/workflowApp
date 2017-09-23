@@ -8,7 +8,7 @@
                         <select id="process" name="process" class="form-control">
                             <option value="">Select value</option>
                             <?php foreach ($arrWorkflows as $objWorkflow): ?>
-                                <option value="<?= $objWorkflow->getId() ?>"><?= $objWorkflow->getworkflowName() ?></option>
+                                <option value="<?= $objWorkflow->getId () ?>"><?= $objWorkflow->getworkflowName () ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -92,6 +92,12 @@
     var orderBy = 'element_id';
     var orderDir = 'ASC';
 
+    function casePagination (pageNo)
+    {
+        page = pageNo;
+        searchCases ();
+    }
+
     $ (document).ready (function ()
     {
         $ ("#SearchCase").off ();
@@ -106,6 +112,8 @@
     function searchCases ()
     {
         var formData = $ ("#casesSearchForm").serialize ();
+        
+        alert(page);
 
         $.ajax ({
             type: "POST",

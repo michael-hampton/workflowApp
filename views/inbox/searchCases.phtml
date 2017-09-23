@@ -12,33 +12,39 @@
         </tr>
     </thead>
     <tbody>
-        <?php foreach ($arrLists['data'] as $objElement): ?>
-            <tr class="footable-even caseRow" projectid="<?= $objElement->getParentId() ?>" style="display: table-row;">
-                <td class="footable-visible footable-first-column"><span class="footable-toggle"></span>
-                    <?= $objElement->getId (); ?>
-                </td>
+        <?php
+        if ( isset ($arrLists['data']) && !empty ($arrLists['data']) ):
+            foreach ($arrLists['data'] as $objElement):
+                ?>
+                <tr class="footable-even caseRow" projectid="<?= $objElement->getParentId () ?>" style="display: table-row;">
+                    <td class="footable-visible footable-first-column"><span class="footable-toggle"></span>
+        <?= $objElement->getId (); ?>
+                    </td>
 
-                <td class="footable-visible">
-                    <?= $objElement->getName (); ?>
-                </td>
+                    <td class="footable-visible">
+        <?= $objElement->getName (); ?>
+                    </td>
 
-                <td class="footable-visible">
-                    <?= $objElement->getWorkflowName (); ?>
-                </td>
+                    <td class="footable-visible">
+        <?= $objElement->getWorkflowName (); ?>
+                    </td>
 
-                <td class="footable-visible">
-                    <?= $objElement->getCurrent_step (); ?>
-                </td>
+                    <td class="footable-visible">
+        <?= $objElement->getCurrent_step (); ?>
+                    </td>
 
-                <td class="footable-visible">
-                    <?= $objElement->getCurrent_user (); ?>
-                </td>
+                    <td class="footable-visible">
+        <?= $objElement->getCurrent_user (); ?>
+                    </td>
 
-                <td class="footable-visible">
-                    <span class="label label-primary"><?= $objElement->getStatus (); ?></span>
-                </td>
-            </tr>
-        <?php endforeach; ?>
+                    <td class="footable-visible">
+                        <span class="label label-primary"><?= $objElement->getStatus (); ?></span>
+                    </td>
+                </tr>
+                <?php
+            endforeach;
+        endif;
+        ?>
 
 
 
@@ -46,7 +52,7 @@
     <tfoot>
         <tr>
             <td colspan="7" class="footable-visible">
-                <?= $pagination ?>
+<?= $pagination ?>
             </td>
         </tr>
     </tfoot>

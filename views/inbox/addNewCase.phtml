@@ -26,7 +26,16 @@
             <?= $html ?>
         </div>
 
-        <div class="modal-footer">                  
+        <div class="modal-footer">       
+
+            <div class="spiner-example" style="display:none;">
+                <div class="sk-spinner sk-spinner-three-bounce">
+                    <div class="sk-bounce1"></div>
+                    <div class="sk-bounce2"></div>
+                    <div class="sk-bounce3"></div>
+                </div>
+            </div>
+
             <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>                
             <button id="saveNewChannel" type="button" class="btn btn-primary">Save changes</button>
         </div> 
@@ -36,6 +45,7 @@
 <script>
     $ ("#saveNewChannel").click (function ()
     {
+        $ (".spiner-example").show ();
         $ ("#AddNewForm").submit ();
     });
 
@@ -54,6 +64,8 @@
     $ ("form#AddNewForm").submit (function ()
     {
         errorCounter = 0;
+        
+         $ (".spiner-example").show ();
 
         $ ("#saveNewChannel").attr ("disabled", "disabled");
         $ (".TaskManagerFormInput").removeClass ("TaskManagerFormError");
@@ -72,21 +84,27 @@
             async: false,
             success: function (response)
             {
+                $ (".spiner-example").hide ();
 
                 if ($.trim (response) == "")
                 {
                     $ ("#saveNewChannel").removeAttr ("disabled");
                     $ ("#successMsgWrapper").slideDown ().delay (3000).slideUp ();
-                    $(".selectedRow").click();
+                    $ (".selectedRow").click ();
 
                 }
                 else
                 {
-                    var objResponse = $.parseJSON ($.trim (response));
-                    $.each (objResponse["validation"], function (index, element)
-                    {
-                        $ ("#" + element["id"] + "Warning").slideDown ();
-                    });
+                    try {
+                        var objResponse = $.parseJSON ($.trim (response));
+                        $.each (objResponse["validation"], function (index, element)
+                        {
+                            $ ("#" + element["id"] + "Warning").slideDown ();
+                        });
+
+                    } catch (err) {
+
+                    }
 
                     $ ("#warningMsgWrapper").slideDown ().delay (3000).slideUp ();
                     $ ("#saveNewChannel").removeAttr ("disabled");

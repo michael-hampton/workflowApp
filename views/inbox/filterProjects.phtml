@@ -26,7 +26,7 @@ if ( empty ($arrCases) )
 
     <tbody>
 
-<?php foreach ($arrCases as $key => $arrCase): ?>
+<?php foreach ($arrCases['data'] as $key => $arrCase): ?>
 
             <tr class="mailItem">
                 <td id="<?= $arrCase->getId () ?>" class="check-mail">

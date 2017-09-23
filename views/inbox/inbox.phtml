@@ -57,18 +57,6 @@ function buildCounters ($arrCounters, $strType = 'DEFAULT')
 
 
                         </ul>
-
-                        <!--                        <h5 class="tag-title">Labels</h5>
-                                                <ul class="tag-list" style="padding: 0">
-                                                    <li><a href=""><i class="fa fa-tag"></i> Family</a></li>
-                                                    <li><a href=""><i class="fa fa-tag"></i> Work</a></li>
-                                                    <li><a href=""><i class="fa fa-tag"></i> Home</a></li>
-                                                    <li><a href=""><i class="fa fa-tag"></i> Children</a></li>
-                                                    <li><a href=""><i class="fa fa-tag"></i> Holidays</a></li>
-                                                    <li><a href=""><i class="fa fa-tag"></i> Music</a></li>
-                                                    <li><a href=""><i class="fa fa-tag"></i> Photography</a></li>
-                                                    <li><a href=""><i class="fa fa-tag"></i> Film</a></li>
-                                                </ul>-->
                         <div class="clearfix"></div>
                     </div>
                 </div>
@@ -131,7 +119,7 @@ function buildCounters ($arrCounters, $strType = 'DEFAULT')
     function projectsPage (selectedPage)
     {
         page = selectedPage;
-
+        
         $.ajax ({
             type: "GET",
             url: "/FormBuilder/inbox/filterProjects/" + listType + "/" + page,

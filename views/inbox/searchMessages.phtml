@@ -26,6 +26,7 @@
         <?php
         
         foreach ($arrNotifications as $key => $arrNotification):
+            
             if ( is_object ($arrNotifications[$key]['project']) ):
 
                 $class = $arrNotification['notifications']->getHasRead () == 0 ? 'unread' : 'read';

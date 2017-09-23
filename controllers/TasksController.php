@@ -225,70 +225,87 @@ class TasksController extends BaseController
     {
         $this->view->disable ();
 
-        $objElement = new Elements ($_SESSION['selectedRequest'], $id);
-        $objStep = new WorkflowStep (null, $objElement);
+        try {
+            $objElement = new Elements ($_SESSION['selectedRequest'], $id);
+            $objStep = new WorkflowStep (null, $objElement);
 
-        if ( isset ($_FILES['fileUpload']) )
-        {
-            if ( !isset ($_FILES['fileUpload']['name'][0]) || trim ($_FILES['fileUpload']['name'][0]) == "" )
+            if ( isset ($_FILES['fileUpload']) )
             {
-                echo json_encode (array("validation" => array(
-                        0 => array(
-                            "message" => "missing_data",
-                            "id" => "file2"
+                if ( !isset ($_FILES['fileUpload']['name'][0]) || trim ($_FILES['fileUpload']['name'][0]) == "" )
+                {
+                    echo json_encode (array("validation" => array(
+                            0 => array(
+                                "message" => "missing_data",
+                                "id" => "file2"
+                            )
                         )
-                    )
-                        )
-                );
+                            )
+                    );
 
+                    return false;
+                }
+
+                $documentType = isset ($_POST['document_type']) ? $_POST['document_type'] : '';
+                $documentTitle = isset ($_POST['document_title']) ? $_POST['document_title'] : '';
+                $documentComment = isset ($_POST['document_comment']) ? $_POST['document_comment'] : '';
+
+                $objCases = new \BusinessModel\Cases();
+                $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
+                $arrFiles = $objCases->uploadCaseFiles ($_FILES, $_SESSION['selectedRequest'], $objStep, $objUser, $documentType, $documentTitle, $documentComment
+                );
+            }
+            
+            $arrStepData['claimed'] = $_SESSION["user"]["username"];
+            $arrStepData["dateCompleted"] = date ("Y-m-d H:i;s");
+            $arrStepData['status'] = "SAVED";
+
+
+            if ( isset ($arrFiles) && is_array ($arrFiles) )
+            {
+                try {
+                    if ( is_array ($arrFiles) )
+                    {
+                        $_POST['form']['file2'] = implode (",", $arrFiles);
+                    }
+                    else
+                    {
+                        $_POST['form']['file2'] = $arrFiles;
+                    }
+                } catch (Exception $ex) {
+                    
+                }
+            }
+
+            $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
+
+            $validation = $objStep->save ($objElement, $_POST['form'], $objUser);
+
+            if ( $validation === false )
+            {
+                $validate['validation'] = $objStep->getFieldValidation ();
+
+                echo json_encode ($validate);
                 return false;
             }
 
-            $documentType = isset ($_POST['document_type']) ? $_POST['document_type'] : '';
-
-            $objCases = new \BusinessModel\Cases();
-            $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
-            $arrFiles = $objCases->uploadCaseFiles ($_FILES, $_SESSION['selectedRequest'], $objStep, $objUser, $documentType
-            );
-        }
-
-        $arrStepData['claimed'] = $_SESSION["user"]["username"];
-        $arrStepData["dateCompleted"] = date ("Y-m-d H:i;s");
-        $arrStepData['status'] = "SAVED";
+            if ( $completeStep == 1 )
+            {
+                $nextStep = $objStep->complete ($objElement, $arrStepData, $objUser);
+            }
 
 
-        if ( isset ($arrFiles) && is_array ($arrFiles) )
-        {
-            $_POST['form']['file2'] = implode (",", $arrFiles);
-        }
-
-        $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
-
-        $validation = $objStep->save ($objElement, $_POST['form'], $objUser);
-
-        if ( $validation === false )
-        {
-            $validate['validation'] = $objStep->getFieldValidation ();
-
-            echo json_encode ($validate);
-            return false;
-        }
-
-        if ( $completeStep == 1 )
-        {
-            $nextStep = $objStep->complete ($objElement, $arrStepData, $objUser);
-        }
-
-
-        if ( is_object ($nextStep) && is_numeric ($nextStep->getStepId ()) && $nextStep->getStepId () != 0 )
-        {
-            echo json_encode (array("validation" => "OK",
-                "next_step" => $nextStep->getStepId ()));
-        }
-        else
-        {
-            echo json_encode (array("validation" => "OK",
-                "next_step" => ""));
+            if ( isset ($nextStep) && is_object ($nextStep) && is_numeric ($nextStep->getStepId ()) && $nextStep->getStepId () != 0 )
+            {
+                echo json_encode (array("validation" => "OK",
+                    "next_step" => $nextStep->getStepId ()));
+            }
+            else
+            {
+                echo json_encode (array("validation" => "OK",
+                    "next_step" => ""));
+            }
+        } catch (Exception $ex) {
+            
         }
     }
 
@@ -848,6 +865,120 @@ class TasksController extends BaseController
         $objFileUpload->streamFile ($realPath, true, $nameFile);
 
         die;
+    }
+
+    public function emailActionsAction ()
+    {
+        $this->view->disable ();
+
+        try {
+            //Validations
+            if ( !isset ($_REQUEST['APP_UID']) )
+            {
+                $_REQUEST['APP_UID'] = '';
+            }
+
+            if ( !isset ($_REQUEST['DELINDEX']) )
+            {
+                $_REQUEST['DELINDEX'] = '';
+            }
+
+            if ( $_REQUEST['APP_UID'] == '' )
+            {
+                throw new Exception ('The parameter APP_UID is empty.');
+            }
+
+            if ( $_REQUEST['DELINDEX'] == '' )
+            {
+                throw new Exception ('The parameter DELINDEX is empty.');
+            }
+
+            $_REQUEST['APP_UID'] = urldecode (utf8_encode ($_REQUEST['APP_UID']));
+            $_REQUEST['DEL_INDEX'] = urldecode (utf8_encode ($_REQUEST['DELINDEX']));
+            $_REQUEST['FIELD'] = urldecode (utf8_encode ($_REQUEST['FIELD']));
+            $_REQUEST['VALUE'] = urldecode (utf8_encode ($_REQUEST['VALUE']));
+            $_REQUEST['ABER'] = urldecode (utf8_encode ($_REQUEST['ABER']));
+
+            $objCase = (new \BusinessModel\Cases())->getCaseInfo ($_REQUEST['APP_UID'], $_REQUEST['DEL_INDEX']);
+
+            $dataField = [];
+            $dataField[$_REQUEST['FIELD']] = $_REQUEST['VALUE'];
+
+            $dataResponses = [];
+            $dataResponses['ABE_REQ_UID'] = $_REQUEST['ABER'];
+            $dataResponses['ABE_RES_CLIENT_IP'] = $_SERVER['REMOTE_ADDR'];
+            $dataResponses['ABE_RES_DATA'] = serialize ($_REQUEST['VALUE']);
+            $dataResponses['ABE_RES_STATUS'] = 'PENDING';
+            $dataResponses['ABE_RES_MESSAGE'] = '';
+
+            try {
+                $abeAbeResponsesInstance = new AbeResponse();
+                $dataResponses['ABE_RES_UID'] = $abeAbeResponsesInstance->createOrUpdate ($dataResponses);
+            } catch (Exception $e) {
+                throw $e;
+            }
+
+            $objStep = new WorkflowStep (null, $objCase);
+            $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
+            //$objStep->save ($objCase, $dataField, $objUser);
+//            $arrStepData['claimed'] = $_SESSION["user"]["username"];
+//            $arrStepData["dateCompleted"] = date ("Y-m-d H:i;s");
+//            $arrStepData['status'] = "SAVED";
+//
+//            $objStep->complete ($objCase, $arrStepData, $objUser);
+
+            $code = 0;
+
+            if ( $code != 0 )
+            {
+                throw new Exception (
+                'An error occurred while the application was being processed.<br /><br />
+                                Error code: ' . $result->status_code . '<br />
+                                Error message: ' . $result->message . '<br /><br />'
+                );
+            }
+
+            //Update
+            $dataResponses['ABE_RES_STATUS'] = ($code == 0) ? 'SENT' : 'ERROR';
+            $dataResponses['ABE_RES_MESSAGE'] = ($code == 0) ? '-' : $result->message;
+
+            try {
+                $abeAbeResponsesInstance = new AbeResponse();
+                $abeAbeResponsesInstance->createOrUpdate ($dataResponses);
+            } catch (Exception $e) {
+                throw $e;
+            }
+
+            $message = '<strong>The answer has been submited. Thank you</strong>';
+
+            $emailActios = new EmailActions();
+
+            $dataAbeRequests = $emailActios->loadAbeRequest ($_REQUEST['ABER']);
+
+            $dataAbeConfiguration['ABE_CASE_NOTE_IN_RESPONSE'] = 1;
+
+            if ( $dataAbeConfiguration['ABE_CASE_NOTE_IN_RESPONSE'] == 1 )
+            {
+                $response = new stdClass();
+                $response->usrUid = $_SESSION['user']['username'];
+                $response->appUid = $_REQUEST['APP_UID'];
+                $response->delIndex = $_REQUEST['DEL_INDEX'];
+                $response->noteText = 'Check the information that was sent for the receiver: ' .
+                        $dataAbeRequests['ABE_REQ_SENT_TO'];
+
+                $emailActios->postNote ($response);
+            }
+
+            $dataAbeRequests['ABE_REQ_ANSWERED'] = 1;
+            $code == 0 ? $emailActios->uploadAbeRequest ($dataAbeRequests) : '';
+
+            echo $message;
+
+
+            //$objCases = new \BusinessModel\Cases();
+        } catch (Exception $e) {
+            throw $e;
+        }
     }
 
 }
