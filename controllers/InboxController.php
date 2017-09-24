@@ -445,4 +445,20 @@ class InboxController extends BaseController
         }
     }
 
+    public function filterUsersAction ()
+    {
+        $this->view->disable ();
+
+        $term = htmlspecialchars ($_POST['term']);
+        $objUsers = (new \BusinessModel\UsersFactory())->getUsers (array("filter" => "user", "filterOption" => $term))['data'];
+
+        $arrUsers = [];
+
+        foreach ($objUsers as $objUser) {
+            $arrUsers[] = array("username" => $objUser->getUsername (), "firstName" => $objUser->getFirstName (), "lastName" => $objUser->getLastName (), "userId" => $objUser->getUserId ());
+        }
+
+        echo json_encode ($arrUsers);
+    }
+
 }

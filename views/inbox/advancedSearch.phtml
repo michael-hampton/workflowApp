@@ -5,7 +5,7 @@
                 <div class="col-sm-4">
                     <div class="form-group">
                         <label class="control-label" for="order_id">Process</label>
-                        <select id="process" name="process" class="form-control">
+                        <select id="process" name="process[]" class="form-control" multiple="multiple">
                             <option value="">Select value</option>
                             <?php foreach ($arrWorkflows as $objWorkflow): ?>
                                 <option value="<?= $objWorkflow->getId () ?>"><?= $objWorkflow->getworkflowName () ?></option>
@@ -16,7 +16,7 @@
                 <div class="col-sm-4">
                     <div class="form-group">
                         <label class="control-label" for="status">Category</label>
-                        <select id="category" name="category" class="form-control">
+                        <select id="category" name="category[]" class="form-control" multiple="multiple">
                             <option value="">Select value</option>
                             <?php foreach ($arrCategories as $arrCategory): ?>
                                 <option value="<?= $arrCategory->getRequestId () ?>"><?= $arrCategory->getName () ?></option>
@@ -27,12 +27,7 @@
                 <div class="col-sm-4">
                     <div class="form-group">
                         <label class="control-label" for="customer">User</label>
-                        <select id="user" name="user" class="form-control">
-                            <option value="">Select value</option>
-                            <?php foreach ($arrUsers['data'] as $arrUser): ?>
-                                <option value="<?= $arrUser->getUsername () ?>"><?= $arrUser->getUsername () ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                        <input type="text" id="user" name="user" class="form-control">
                     </div>
                 </div>
             </div>
@@ -100,6 +95,56 @@
 
     $ (document).ready (function ()
     {
+        $ ("input#user").autocomplete ({
+            source: function (request, response)
+            {
+                $.ajax ({
+                    dataType: "json",
+                    type: 'POST',
+                    url: '/FormBuilder/inbox/filterUsers',
+                    data:
+                            {
+                                term: request.term,
+                            },
+                    success: function (data)
+                    {
+                        $ ('input.suggest-user').removeClass ('ui-autocomplete-loading');
+                        // hide loading image
+
+                        response (data);
+                    },
+                    error: function (data)
+                    {
+                        $ ('input.suggest-user').removeClass ('ui-autocomplete-loading');
+                    }
+                });
+            },
+            minLength: 3,
+            open: function ()
+            {},
+            close: function ()
+            {},
+            focus: function (event, ui)
+            {},
+            select: function (event, ui)
+            {
+                alert(ui.item.username);
+                $ ("#user").val (ui.item.username);
+                $ ("#SearchCase").click ();
+                
+                return false;
+                alert ("SELECTED");
+            }
+        }).data ("ui-autocomplete")._renderItem = function (ul, item)
+        {
+            return $ ("<li>")
+                    .data ("ui-autocomplete-item", item)
+                    .append ("<a> " + item.firstName + " " + item.lastName + " ( " + item.username + " )" + "</a>")
+                    .appendTo (ul);
+        };
+        ;
+
+
         $ ("#SearchCase").off ();
         $ ("#SearchCase").on ("click", function ()
         {
@@ -112,8 +157,8 @@
     function searchCases ()
     {
         var formData = $ ("#casesSearchForm").serialize ();
-        
-        alert(page);
+
+        alert (page);
 
         $.ajax ({
             type: "POST",
