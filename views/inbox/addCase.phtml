@@ -109,7 +109,7 @@
                         url: "/FormBuilder/inbox/searchCases/0/element_id/ASC/" + $ ("#caseSearchText").val (),
                         success: function (response)
                         {
-                            $("#tab-1 > .table-responsive").html(response);
+                            $ ("#tab-1 > .table-responsive").html (response);
                         }, error: function (request, status, error)
                         {
                             alert (status + ' ' + error);
@@ -119,11 +119,13 @@
 
                 $ (".reassignUsers").on ("click", function ()
                 {
-                    //var parentId = $ (this).parent ().parent ().attr (projectid);
+                    var parentId = $ (this).parent ().parent ().attr ('projectid');
+                    var taskId = $(this).attr("taskid");
 
                     $.ajax ({
-                        type: "GET",
-                        url: "/FormBuilder/inbox/reassignUsers/",
+                        type: "POST",
+                        url: "/FormBuilder/inbox/reassignUsers/" + parentId,
+                        data: {"taskUid": taskId, "search": '', "pageSize": 20},
                         success: function (response)
                         {
                             $ ("#reassignUsersModal").html (response).modal ("show");
@@ -138,8 +140,8 @@
                 $ (".openSummary").on ("click", function ()
                 {
                     var parentId = $ (this).parent ().parent ().attr ('projectid');
-                    
-                    alert("Here");
+
+                    alert ("Here");
 
                     $.ajax ({
                         type: "GET",
@@ -152,14 +154,14 @@
                             alert (status + ' ' + error);
                         }
                     });
-                    
+
                     return false;
                 });
 
 
                 $ (".caseRow").on ("click", function ()
                 {
-                    var projectId = $ (this).parent().attr ("projectid");
+                    var projectId = $ (this).parent ().attr ("projectid");
 
                     getProjectDetails (projectId);
                 });

@@ -2,8 +2,6 @@
     <div class="ibox-content">
         <h2>Cases</h2>
 
-        <a href="#" class="reassignUsers">Re-assign users</a>
-
         <div class="input-group">
             <input type="text" placeholder="Search client " class="input form-control" id="caseSearchText">
             <span class="input-group-btn">
@@ -38,7 +36,10 @@
                                             <td class="caseRow"> <?= $objCase->getName () ?></td>
                                             <td class="caseRow"> <?= $objCase->getCurrent_step () ?></td>
                                             <td class="caseRow"> <?= $objCase->getParentId () ?></td>
-                                            <td> <i style="cursor: pointer;" class="openSummary fa fa-info"></i></td>
+                                            <td style="font-size:18px;"> 
+                                                <i taskId="<?= $objCase->getCurrentStepId() ?>" style="cursor: pointer;" class="fa fa-user reassignUsers"></i>
+                                                <i style="cursor: pointer;" class="openSummary fa fa-info"></i>
+                                            </td>
                                         </tr>
                                     <?php
                                     endforeach;

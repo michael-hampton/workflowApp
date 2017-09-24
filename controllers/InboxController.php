@@ -356,17 +356,93 @@ class InboxController extends BaseController
     public function openSummaryAction ($app_uid)
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
-        $objCase = (new \BusinessModel\Cases())->getCaseInfo($app_uid);
-        
+        $objCase = (new \BusinessModel\Cases())->getCaseInfo ($app_uid);
+
         $this->view->objCase = $objCase;
-        $this->view->audit = $objCase->getAudit()['elements'][1]['steps'][$objCase->getCurrentStepId()];
+        $this->view->audit = $objCase->getAudit ()['elements'][1]['steps'][$objCase->getCurrentStepId ()];
     }
 
     public function reassignUsersAction ($projectId)
     {
+        $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
+
+        $result = (new Mysql2())->_query ("SELECT t.* FROM workflow.status_mapping m
+                            INNER JOIN workflow.task t ON t.TAS_UID = m.TAS_UID
+                            WHERE id = ?", [$_POST['taskUid']]);
+
+        if ( !isset ($result[0]) || empty ($result[0]) )
+        {
+            throw new Exception ("Failed to find task");
+        }
+
+        $objTask = new Task ($result[0]['TAS_UID']);
+        $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
+
+        $search = $_POST['search'];
+        $pageSize = $_POST['pageSize'];
+        $sortField = (isset ($_POST['sort'])) ? $_POST['sort'] : '';
+        $sortDir = (isset ($_POST['dir'])) ? $_POST['dir'] : '';
+        $start = (isset ($_POST['start'])) ? $_POST['start'] : 0;
+        $limit = (isset ($_POST['limit'])) ? $_POST['limit'] : $pageSize;
+
+        $response = [];
+        try {
+            $case = new \BusinessModel\Cases();
+            $result2 = $case->getUsersToReassign ($objUser, $objTask, ['filter' => $search], $sortField, $sortDir, $start, $limit);
+
+            $response['status'] = 'OK';
+            $response['success'] = true;
+            $response['resultTotal'] = $result2['total'];
+            $response['resultRoot'] = $result2['data'];
+            $this->view->appUid = $projectId;
+            $this->view->taskId = $result[0]['TAS_UID'];
+            $this->view->response = $response;
+        } catch (Exception $e) {
+            $response['status'] = 'ERROR';
+            $response['message'] = $e->getMessage ();
+        }
+    }
+
+    public function saveReassignUserAction ()
+    {
         $this->view->disable ();
-        echo $app_uid;
-        die;
+
+        try {
+            $APP_UID = $_POST["APP_UID"];
+            $DEL_INDEX = $_POST["DEL_INDEX"];
+            $cases = new \BusinessModel\Cases();
+
+            $objCase = $cases->getCaseInfo ($APP_UID);
+            $caseData = $objCase->getAudit ()['elements'][1]['steps'];
+
+            $flagReassign = true;
+            $flagHasUser = false;
+
+            $objUser = (new \BusinessModel\UsersFactory())->getUser ($_POST['userId']);
+
+            foreach ($caseData as $data) {
+
+                if ( trim ($data['claimed']) === trim ($objUser->getUsername ()) )
+                {
+                    $flagReassign = false;
+                }
+
+                $flagHasUser = true;
+            }
+
+            if ( $flagHasUser === false )
+            {
+                throw new Exception ("User could not be reassigned");
+            }
+
+            //If the currentUser is diferent to nextUser, create the thread
+            if ( $flagReassign )
+            {
+                $cases->reassignCase ($APP_UID, new Task ($DEL_INDEX), $objUser);
+            }
+        } catch (Exception $ex) {
+            throw $ex;
+        }
     }
 
 }
