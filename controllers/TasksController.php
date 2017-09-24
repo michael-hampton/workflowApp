@@ -22,6 +22,15 @@ class TasksController extends BaseController
     public function ClaimItAction ($workflow, $id)
     {
         $this->view->disable ();
+	    
+	if(!is_numeric($workflow) || $workflow === null) {
+		throw new Exception("invalid id given");
+	}
+	    
+        if(!is_numeric($id) || $id === null) {
+	    throw new Exception("invalid id given");
+	}
+	    
         $objElements = new Elements ($_SESSION['selectedRequest'], $id);
         $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
 
@@ -31,7 +40,15 @@ class TasksController extends BaseController
 
     public function moveOnAction ($workflow, $id)
     {
-        $this->view->disable ();
+	  if(!is_numeric($workflow) || $workflow === null) {
+	      throw new Exception("invalid id given");  
+	  }
+	   
+	  if(!is_numeric($id) || $id === null) {
+               throw new Exception("invalid id given"); 
+	  }
+        
+	    $this->view->disable ();
         $objElement = new Elements ($_SESSION['selectedRequest'], $id);
 
         $objCases = new \BusinessModel\Cases();
@@ -42,7 +59,11 @@ class TasksController extends BaseController
     public function AssignAction ($user, $workflow, $id)
     {
         $this->view->disable ();
-        $objElements = new Elements ($_SESSION['selectedRequest'], $id);
+        
+	if(!is_numeric($id) || $id === null) {
+		throw new Exception("invalid id given");
+	}
+	$objElements = new Elements ($_SESSION['selectedRequest'], $id);
         $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
 
         $objCases = new \BusinessModel\Cases();
@@ -60,6 +81,10 @@ class TasksController extends BaseController
     {
         $this->view->disable ();
 
+	if(!is_numeric($id) || $id === null) {
+	    throw new Exception("invalid id given"); 
+	}
+	    
         $objElements = new Elements ($_SESSION['selectedRequest'], $id);
 
         $objCases = new \BusinessModel\Cases();
@@ -70,7 +95,9 @@ class TasksController extends BaseController
     public function holdAction ($workflow, $id)
     {
         $this->view->disable ();
-
+	if(!is_numeric($id) || $id === null) {
+		throw new Exception("invalid id given");
+	}
         $objElements = new Elements ($_SESSION['selectedRequest'], $id);
         $objCases = new \BusinessModel\Cases();
         $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
@@ -82,6 +109,10 @@ class TasksController extends BaseController
     {
         $this->view->disable ();
 
+	   	if(!is_numeric($id) || $id === null) {
+		throw new Exception("invalid id given"); 
+		}
+	    
         $objElement = new Elements ($_SESSION['selectedRequest'], $id);
         $objCases = new \BusinessModel\Cases();
         $objUser = (new \BusinessModel\UsersFactory)->getUser ($_SESSION['user']['usrid']);
