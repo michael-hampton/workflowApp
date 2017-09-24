@@ -79,8 +79,8 @@ class InboxController extends BaseController
         $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
 
         $this->view->arrCases = $objLists->loadList ($filter, $objUser, array("userId" => $_SESSION['user']['usrid'], "page" => $page, "page_limit" => PRODUCTS_PAGE_LIMIT));
-        
-        
+
+
         $this->view->pagination = $this->getPagination ("projectsPage", $this->view->arrCases['count']);
     }
 
@@ -241,7 +241,7 @@ class InboxController extends BaseController
         $teamId = $objUser->getTeam_id ();
         $userId = $objUser->getUserId ();
 
-        foreach ($arrWorkflows as $key => $objWorkflow) {
+        foreach ($arrWorkflows['data'] as $key => $objWorkflow) {
 
             $blHasPermission = false;
 
@@ -318,7 +318,7 @@ class InboxController extends BaseController
         $this->view->arrUsers = $objUsers->getUsers (array(), "u.username", "ASC", 0, PRODUCTS_PAGE_LIMIT);
     }
 
-    public function searchCasesAction ($page, $orderBy, $orderDir)
+    public function searchCasesAction ($page, $orderBy = '', $orderDir = 'ASC', $searchText = '')
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
 
@@ -332,6 +332,7 @@ class InboxController extends BaseController
         $category = empty ($_POST['category']) ? null : $_POST['category'];
         $user = empty ($_POST['user']) ? null : $_POST['user'];
         $status = empty ($_POST['status']) ? null : $_POST['status'];
+        $search = empty ($searchText) ? null : $searchText;
 
         $objCases = new \BusinessModel\Cases();
 
@@ -344,11 +345,28 @@ class InboxController extends BaseController
                     "limit" => PRODUCTS_PAGE_LIMIT,
                     "start" => $page,
                     "userId" => $_SESSION['user']['username'],
-                    "action" => "search"
+                    "action" => "search",
+                    "search" => $search
                 )
         );
 
         $this->view->pagination = $this->getPagination ("casePagination", $this->view->arrLists['count']);
+    }
+
+    public function openSummaryAction ($app_uid)
+    {
+        $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
+        $objCase = (new \BusinessModel\Cases())->getCaseInfo($app_uid);
+        
+        $this->view->objCase = $objCase;
+        $this->view->audit = $objCase->getAudit()['elements'][1]['steps'][$objCase->getCurrentStepId()];
+    }
+
+    public function reassignUsersAction ($projectId)
+    {
+        $this->view->disable ();
+        echo $app_uid;
+        die;
     }
 
 }

@@ -105,6 +105,12 @@ function buildCounters ($arrCounters, $strType = 'DEFAULT')
 <div class="modal inmodal fade" id="myModal7" tabindex="-1" role="dialog"  aria-hidden="true">
 </div>
 
+<div class="modal inmodal fade" id="summaryModal" tabindex="-1" role="dialog"  aria-hidden="true">
+</div>
+
+<div class="modal inmodal fade" id="reassignUsersModal" tabindex="-1" role="dialog"  aria-hidden="true">
+</div>
+
 <script src="/FormBuilder/public/js/plugins/iCheck/icheck.min.js"></script>
 
 <script>
@@ -313,7 +319,7 @@ function buildCounters ($arrCounters, $strType = 'DEFAULT')
                 {
                     console.log ("critical errror occured");
                 }
-            })
+            });
         });
 
         $ (".changeStatus").on ("click", function ()

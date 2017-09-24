@@ -2,10 +2,12 @@
     <div class="ibox-content">
         <h2>Cases</h2>
 
+        <a href="#" class="reassignUsers">Re-assign users</a>
+
         <div class="input-group">
-            <input type="text" placeholder="Search client " class="input form-control">
+            <input type="text" placeholder="Search client " class="input form-control" id="caseSearchText">
             <span class="input-group-btn">
-                <button type="button" class="btn btn btn-primary"> <i class="fa fa-search"></i> Search</button>
+                <button type="button" class="btn btn btn-primary searchCases"> <i class="fa fa-search"></i> Search</button>
             </span>
         </div>
         <div class="clients-list">
@@ -23,28 +25,31 @@
                             <th>Current User</th>
                             <th>Case Name</th>
                             <th>Current Step</th>
-                              <th>Project Id</th>
+                            <th>Project Id</th>
                             </thead>
 
                             <tbody>
-                                <?php 
-                                if(!empty($arrLists['data'])):
-                                    foreach ($arrLists['data'] as $objCase): ?>
-                                    <tr class="caseRow" projectid="<?= $objCase->getParentId () ?>">
-                                            <td><a data-toggle="tab" href="#contact-1" class="client-link"><?= $objCase->getCurrent_user () ?></a></td>
-                                            <td> <?= $objCase->getName () ?></td>
-                                            <td> <?= $objCase->getCurrent_step () ?></td>
-                                             <td> <?= $objCase->getParentId () ?></td>
+                                <?php
+                                if ( !empty ($arrLists['data']) ):
+                                    foreach ($arrLists['data'] as $objCase):
+                                        ?>
+                                        <tr projectid="<?= $objCase->getParentId () ?>">
+                                            <td class="caseRow"><a data-toggle="tab" href="#contact-1" class="client-link"><?= $objCase->getCurrent_user () ?></a></td>
+                                            <td class="caseRow"> <?= $objCase->getName () ?></td>
+                                            <td class="caseRow"> <?= $objCase->getCurrent_step () ?></td>
+                                            <td class="caseRow"> <?= $objCase->getParentId () ?></td>
+                                            <td> <i style="cursor: pointer;" class="openSummary fa fa-info"></i></td>
                                         </tr>
-                                    <?php endforeach;
-                                    endif; 
-                                    ?>
+                                    <?php
+                                    endforeach;
+                                endif;
+                                ?>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-            
+
         </div>
 
     </div>

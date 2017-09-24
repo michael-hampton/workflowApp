@@ -15,24 +15,24 @@
             ?>
 
             <?php
-            if ( $requestId === null || $requestId !== $objWorkflow->getRequestId() )
+            if ( $requestId === null || $requestId !== $objWorkflow->getRequestId () )
             {
                 echo '</ul><ul class="list-group clear-list">'
-                . '<strong>' . $objWorkflow->getcategoryName() . '</strong>';
+                . '<strong>' . $objWorkflow->getcategoryName () . '</strong>';
 
                 $end = true;
             }
             ?>
 
-            <li workflowid="<?= $objWorkflow->getId() ?>" class="list-group-item fist-item" style="border-bottom: 1px dotted #CCC;">
+            <li workflowid="<?= $objWorkflow->getId () ?>" class="list-group-item fist-item" style="border-bottom: 1px dotted #CCC;">
                 <span class="pull-right"> 
-                    <button workflowid="<?= $objWorkflow->getId() ?>" type="button" class="btn btn-primary btn-xs addNewCase">+</button> 
+                    <button workflowid="<?= $objWorkflow->getId () ?>" type="button" class="btn btn-primary btn-xs addNewCase">+</button> 
                 </span>
-                <?= $objWorkflow->getworkflowName() ?>
+                <?= $objWorkflow->getworkflowName () ?>
             </li>
 
             <?php
-            $requestId = $objWorkflow->getRequestId();
+            $requestId = $objWorkflow->getRequestId ();
             $end = false;
         }
         ?>
@@ -50,9 +50,9 @@
 
     $ ("#processSearchText").on ("keyup", function ()
     {
-        var searchText = $(this).val();
-        var workflowId = $(".selectedRow").attr("workflowid");
-        
+        var searchText = $ (this).val ();
+        var workflowId = $ (".selectedRow").attr ("workflowid");
+
         $.ajax ({
             type: "POST",
             data: {"searchText": searchText},
@@ -102,9 +102,64 @@
             {
                 $ (".casesList").html (response);
 
+                $ (".searchCases").on ("click", function ()
+                {
+                    $.ajax ({
+                        type: "GET",
+                        url: "/FormBuilder/inbox/searchCases/0/element_id/ASC/" + $ ("#caseSearchText").val (),
+                        success: function (response)
+                        {
+                            $("#tab-1 > .table-responsive").html(response);
+                        }, error: function (request, status, error)
+                        {
+                            alert (status + ' ' + error);
+                        }
+                    });
+                });
+
+                $ (".reassignUsers").on ("click", function ()
+                {
+                    //var parentId = $ (this).parent ().parent ().attr (projectid);
+
+                    $.ajax ({
+                        type: "GET",
+                        url: "/FormBuilder/inbox/reassignUsers/",
+                        success: function (response)
+                        {
+                            $ ("#reassignUsersModal").html (response).modal ("show");
+                        }
+                        , error: function (request, status, error)
+                        {
+                            alert (status + ' ' + error);
+                        }
+                    });
+                });
+
+                $ (".openSummary").on ("click", function ()
+                {
+                    var parentId = $ (this).parent ().parent ().attr ('projectid');
+                    
+                    alert("Here");
+
+                    $.ajax ({
+                        type: "GET",
+                        url: "/FormBuilder/inbox/openSummary/" + parentId,
+                        success: function (response)
+                        {
+                            $ ("#summaryModal").html (response).modal ("show");
+                        }, error: function (request, status, error)
+                        {
+                            alert (status + ' ' + error);
+                        }
+                    });
+                    
+                    return false;
+                });
+
+
                 $ (".caseRow").on ("click", function ()
                 {
-                    var projectId = $ (this).attr ("projectid");
+                    var projectId = $ (this).parent().attr ("projectid");
 
                     getProjectDetails (projectId);
                 });
@@ -113,7 +168,8 @@
             {
                 console.log ("critical errror occured");
             }
-        });
+        }
+        );
     });
 
     function getProjectDetails (projectId)
