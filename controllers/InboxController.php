@@ -413,6 +413,7 @@ class InboxController extends BaseController
             $cases = new \BusinessModel\Cases();
 
             $objCase = $cases->getCaseInfo ($APP_UID);
+
             $caseData = $objCase->getAudit ()['elements'][1]['steps'];
 
             $flagReassign = true;
@@ -438,7 +439,7 @@ class InboxController extends BaseController
             //If the currentUser is diferent to nextUser, create the thread
             if ( $flagReassign )
             {
-                $cases->reassignCase ($APP_UID, new Task ($DEL_INDEX), $objUser);
+                $cases->reassignCase ($objCase, new Task ($DEL_INDEX), $objUser, $_POST['reason']);
             }
         } catch (Exception $ex) {
             throw $ex;
@@ -459,6 +460,139 @@ class InboxController extends BaseController
         }
 
         echo json_encode ($arrUsers);
+    }
+
+    public function saveABEFormAction ()
+    {
+        $this->view->disable ();
+
+        try {
+            //Validations
+            if ( !isset ($_REQUEST['APP_UID']) )
+            {
+                $_REQUEST['APP_UID'] = '';
+            }
+
+            if ( !isset ($_REQUEST['elementId']) )
+            {
+                $_REQUEST['DELINDEX'] = '';
+            }
+
+            if ( $_REQUEST['projectId'] == '' )
+            {
+                throw new Exception ('The parameter APP_UID is empty.');
+            }
+
+            $_REQUEST['APP_UID'] = urldecode (utf8_encode ($_REQUEST['projectId']));
+            //$_REQUEST['DEL_INDEX'] = urldecode (utf8_encode ($_REQUEST['elementId']));
+            $_REQUEST['ABER'] = urldecode (utf8_encode ($_REQUEST['ABER']));
+
+            $_REQUEST['elementId'] = isset ($_REQUEST['elementId']) ? $_REQUEST['elementId'] : 1;
+
+            $objCase = (new \BusinessModel\Cases())->getCaseInfo ($_REQUEST['projectId'], $_REQUEST['elementId']);
+
+            $dataResponses = [];
+            $dataResponses['ABE_REQ_UID'] = $_REQUEST['ABER'];
+            $dataResponses['ABE_RES_CLIENT_IP'] = $_SERVER['REMOTE_ADDR'];
+            $dataResponses['ABE_RES_DATA'] = '';
+            $dataResponses['ABE_RES_STATUS'] = 'PENDING';
+            $dataResponses['ABE_RES_MESSAGE'] = '';
+
+            try {
+                $abeAbeResponsesInstance = new AbeResponse();
+                $dataResponses['ABE_RES_UID'] = $abeAbeResponsesInstance->createOrUpdate ($dataResponses);
+            } catch (Exception $e) {
+                throw $e;
+            }
+
+            $objStep = new WorkflowStep (null, $objCase);
+            $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
+            $arrStepData['claimed'] = $_SESSION["user"]["username"];
+            $arrStepData["dateCompleted"] = date ("Y-m-d H:i;s");
+            $arrStepData['status'] = "SAVED";
+            $objStep->save ($objCase, $_POST['form'], $objUser);
+            //$objStep->complete ($objCase, $arrStepData, $objUser);
+
+            $code = 0;
+
+            if ( $code != 0 )
+            {
+                throw new Exception (
+                'An error occurred while the application was being processed.<br /><br />
+                                Error code: ' . $result->status_code . '<br />
+                                Error message: ' . $result->message . '<br /><br />'
+                );
+            }
+
+            //Update
+            $dataResponses['ABE_RES_STATUS'] = ($code == 0) ? 'SENT' : 'ERROR';
+            $dataResponses['ABE_RES_MESSAGE'] = ($code == 0) ? '-' : $result->message;
+
+            try {
+                $abeAbeResponsesInstance = new AbeResponse();
+                $abeAbeResponsesInstance->createOrUpdate ($dataResponses);
+            } catch (Exception $e) {
+                throw $e;
+            }
+
+            $message = '<strong>The answer has been submited. Thank you</strong>';
+
+            $emailActios = new EmailActions();
+
+            $dataAbeRequests = $emailActios->loadAbeRequest ($_REQUEST['ABER']);
+
+            $dataAbeConfiguration['ABE_CASE_NOTE_IN_RESPONSE'] = 1;
+
+            if ( $dataAbeConfiguration['ABE_CASE_NOTE_IN_RESPONSE'] == 1 )
+            {
+                $response = new stdClass();
+                $response->usrUid = $_SESSION['user']['username'];
+                $response->appUid = $_REQUEST['projectId'];
+                $response->delIndex = $_REQUEST['elementId'];
+                $response->noteText = 'Check the information that was sent for the receiver: ' .
+                        $dataAbeRequests['ABE_REQ_SENT_TO'];
+
+                $emailActios->postNote ($response);
+            }
+
+            $dataAbeRequests['ABE_REQ_ANSWERED'] = 1;
+            $code == 0 ? $emailActios->uploadAbeRequest ($dataAbeRequests) : '';
+
+            echo $message;
+
+
+            //$objCases = new \BusinessModel\Cases();
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    public function batchRoutingAction ()
+    {
+        $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
+
+        $consolidatedCases = new ConsolidatedCases();
+        $this->view->arrTabs = $consolidatedCases->getListTabs ();
+        $this->view->arrCases = $consolidatedCases->getCases ();
+    }
+
+    public function saveBatchRoutingAction ()
+    {
+        $this->view->disable ();
+
+        if ( !isset ($_POST['batches']) || empty ($_POST['batches']) || !is_array ($_POST['batches']) )
+        {
+            return false;
+        }
+
+        $objCases = new \BusinessModel\Cases();
+        $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
+
+        foreach ($_POST['batches'] as $batch) {
+
+            $objElement = new Elements ($batch['projectId'], $batch['caseId']);
+            $objCases->updateStatus ($objElement, $objUser, "COMPLETE");
+        }
     }
 
 }

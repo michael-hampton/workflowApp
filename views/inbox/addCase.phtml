@@ -141,8 +141,6 @@
                 {
                     var parentId = $ (this).parent ().parent ().attr ('projectid');
 
-                    alert ("Here");
-
                     $.ajax ({
                         type: "GET",
                         url: "/FormBuilder/inbox/openSummary/" + parentId,

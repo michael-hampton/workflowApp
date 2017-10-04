@@ -33,6 +33,8 @@ function buildCounters ($arrCounters, $strType = 'DEFAULT')
             <div class="ibox float-e-margins">
                 <div class="ibox-content mailbox-content">
 
+                    <?php $showBatchRouting = 1; ?>
+
                     <div class="file-manager">
                         <div class="space-25"></div>
                         <h5>Folders</h5>
@@ -40,6 +42,14 @@ function buildCounters ($arrCounters, $strType = 'DEFAULT')
                             <li><a class="addProcess" href="#"> <i class="fa fa-plus-square"></i> New Case</a></li>
                             <li><a class="changeStatus" status="1" href="#"> <i class="fa fa-inbox "></i> Inbox <span class="label label-warning pull-right"><?= buildCounters ($arrCounters, "CASES_INBOX") ?></span> </a></li>
                             <li><a class="changeStatus" href="#"> <i class="fa fa-envelope-o"></i> Send Mail</a></li>
+
+                            <?php
+                            if ( $showBatchRouting === 1 )
+                            {
+                                echo '<li><a class="batchRouting" status="8" href="#" href="mailbox.html"> <i class="fa fa-certificate"></i> Batch Routing</a></li>';
+                            }
+                            ?>
+
                             <li><a class="changeStatus" status="8" href="#" href="mailbox.html"> <i class="fa fa-certificate"></i> Important</a></li>
                             <li><a class="changeStatus" href="#" status="2" href="mailbox.html"> <i class="fa fa-file-text-o"></i> Drafts <span class="label label-danger pull-right"><?= buildCounters ($arrCounters, "CASES_DRAFT") ?></span></a></li>
                             <li><a class="changeStatus" href="#" href="mailbox.html"> <i class="fa fa-trash-o"></i> Trash</a></li>
@@ -91,7 +101,7 @@ function buildCounters ($arrCounters, $strType = 'DEFAULT')
             </div>
             <div class="mail-box">
 
-              
+
 
 
             </div>
@@ -125,7 +135,7 @@ function buildCounters ($arrCounters, $strType = 'DEFAULT')
     function projectsPage (selectedPage)
     {
         page = selectedPage;
-        
+
         $.ajax ({
             type: "GET",
             url: "/FormBuilder/inbox/filterProjects/" + listType + "/" + page,
@@ -140,6 +150,26 @@ function buildCounters ($arrCounters, $strType = 'DEFAULT')
             }
         });
     }
+
+    $ (".batchRouting").off ();
+    $ (".batchRouting").on ("click", function ()
+    {
+        $.ajax ({
+            type: "GET",
+            url: "/FormBuilder/inbox/batchRouting/",
+            success: function (response)
+            {
+                alert(response);
+                $ (".mail-box").html (response);
+                $ (".mail-box-header").hide ();
+                rebind ();
+            },
+            error: function (request, status, error)
+            {
+                console.log ("critical errror occured");
+            }
+        });
+    });
 
     $ (".advancedSearch").off ();
     $ (".advancedSearch").on ("click", function ()
@@ -235,7 +265,7 @@ function buildCounters ($arrCounters, $strType = 'DEFAULT')
             {
                 console.log ("critical errror occured");
             }
-        })
+        });
     }
 
     function searchProcesses ()

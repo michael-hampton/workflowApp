@@ -951,12 +951,12 @@ class TasksController extends BaseController
 
             $objStep = new WorkflowStep (null, $objCase);
             $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
-            //$objStep->save ($objCase, $dataField, $objUser);
-//            $arrStepData['claimed'] = $_SESSION["user"]["username"];
-//            $arrStepData["dateCompleted"] = date ("Y-m-d H:i;s");
-//            $arrStepData['status'] = "SAVED";
-//
-//            $objStep->complete ($objCase, $arrStepData, $objUser);
+            $objStep->save ($objCase, $dataField, $objUser);
+            $arrStepData['claimed'] = $_SESSION["user"]["username"];
+            $arrStepData["dateCompleted"] = date ("Y-m-d H:i;s");
+            $arrStepData['status'] = "SAVED";
+
+            $objStep->complete ($objCase, $arrStepData, $objUser);
 
             $code = 0;
 

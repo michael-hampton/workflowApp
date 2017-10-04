@@ -1,0 +1,140 @@
+<div class="row">
+    <div class="ibox">
+        <div class="ibox-content">
+            <div class="col-lg-12">
+                <div class="panel blank-panel">
+                    <div class="panel-heading">
+                        <div class="panel-options">
+                            <ul class="nav nav-tabs">
+                                <?php foreach ($arrTabs as $key => $arrTab): ?>
+                                    <li class="active"><a href="#tab-<?= $key ?>" data-toggle="tab"><?= $arrTab['tab_title'] ?></a></li>
+                                <?php endforeach ?>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="panel-body">
+
+                        <div class="tab-content">
+
+                            <?php foreach ($arrTabs as $key => $arrTab): ?>
+
+                                <div class="tab-pane active" id="tab-<?= $key ?>">
+
+                                    <table class="footable table table-stripped toggle-arrow-tiny default breakpoint footable-loaded" data-page-size="15">
+                                        <thead>
+                                            <tr>
+
+                                                <th data-toggle="true" class="footable-visible footable-first-column footable-sortable"><span class="footable-sort-indicator"></span></th>
+                                                <th data-hide="phone" class="footable-visible footable-sortable">Title<span class="footable-sort-indicator"></span></th>
+                                                <th data-hide="all" class="footable-sortable">Summary<span class="footable-sort-indicator"></span></th>
+                                                <th data-hide="phone" class="footable-visible footable-sortable">Date<span class="footable-sort-indicator"></span></th>
+                                                <th data-hide="phone,tablet" class="footable-visible footable-sortable">Requestor<span class="footable-sort-indicator"></span></th>
+                                                <th class="text-right footable-visible footable-last-column" data-sort-ignore="true">Action</th>
+
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+
+
+
+
+
+
+                                            <?php foreach ($arrCases as $arrCase): ?>
+                                                <tr class="footable-even" style="display: table-row;">
+                                                    <td class="footable-visible footable-first-column"><span class="footable-toggle"></span>
+                                                        <?= $arrCase->getId () ?>
+                                                    </td>
+                                                    <td class="footable-visible">
+                                                        <?= $arrCase->getName () ?>
+                                                    </td>
+                                                    <td> <a href="#" projectid="<?= $arrCase->getParentId () ?>" class="openSummary">Summary</a> </td>
+                                                    <td class="footable-visible"></td>
+                                                    <td class="footable-visible"><?= $arrCase->getCurrent_user () ?></td>
+                                                    <td class="footable-visible"><?= $arrCase->getDueDate () ?></td>
+                                                    <td class="text-right footable-visible footable-last-column">
+                                                        <input type="checkbox" projectId="<?= $arrCase->getParentId () ?>" caseId="<?= $arrCase->getId () ?>" name="selectedCases[]"> 
+                                                    </td>
+                                                </tr>
+
+                                            <?php endforeach; ?>
+
+                                        </tbody>
+    <!--                                        <tfoot>
+                                            <tr>
+                                                <td colspan="6" class="footable-visible">
+                                                    <ul class="pagination pull-right"><li class="footable-page-arrow disabled"><a data-page="first" href="#first">«</a></li><li class="footable-page-arrow disabled"><a data-page="prev" href="#prev">‹</a></li><li class="footable-page active"><a data-page="0" href="#">1</a></li><li class="footable-page"><a data-page="1" href="#">2</a></li><li class="footable-page-arrow"><a data-page="next" href="#next">›</a></li><li class="footable-page-arrow"><a data-page="last" href="#last">»</a></li></ul>
+                                                </td>
+                                            </tr>
+                                        </tfoot>-->
+                                    </table>
+
+                                <?php endforeach; ?>
+
+
+                            </div>
+
+                            <button type="button" id="saveBatch" class="btn btn-w-m btn-primary">Save</button>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<script>
+    $ (".openSummary").on ("click", function ()
+    {
+        var parentId = $ (this).attr ('projectid');
+        $.ajax ({
+            type: "GET",
+            url: "/FormBuilder/inbox/openSummary/" + parentId,
+            success: function (response)
+            {
+                $ ("#summaryModal").html (response).modal ("show");
+            }, error: function (request, status, error)
+            {
+                alert (status + ' ' + error);
+            }
+        });
+        return false;
+    });
+
+    $ ("#saveBatch").on ("click", function ()
+    {
+        var batches = [];
+
+        alert ("Here");
+
+        $ ("input:checked").each (function ()
+        {
+            var $this = $ (this);
+            var data = {};
+
+            data.caseId = $this.attr ("caseId");
+            data.projectId = $this.attr ("projectId");
+            batches.push (data);
+        });
+
+        $.ajax ({
+            type: "POST",
+            url: "/FormBuilder/inbox/saveBatchRouting/",
+            data: {"batches": batches},
+            success: function (response)
+            {
+               aleert(response);
+            },
+            error: function (request, status, error)
+            {
+                console.log ("critical errror occured");
+            }
+        });
+
+        console.log (batches);
+    });
+</script>
