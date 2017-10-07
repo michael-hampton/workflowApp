@@ -127,7 +127,24 @@
             data: {"batches": batches},
             success: function (response)
             {
-               aleert(response);
+                if ($.trim (response) === "")
+                {
+                    swal ({
+                        title: "Success!",
+                        text: "All Cases were routed successfully!",
+                        type: "success"
+                    });
+
+                }
+                else
+                {
+                    swal ({
+                        title: "Cases could not be routed",
+                        text: response,
+                        type: "warning",
+                        showCancelButton: false
+                    });
+                }
             },
             error: function (request, status, error)
             {
