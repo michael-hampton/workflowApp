@@ -1,8 +1,10 @@
 <?php
+
 use Phalcon\Mvc\View;
 
 class AttachmentsController extends BaseController
 {
+
     public function uploadAttachedFileAction ($projectId)
     {
         $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
@@ -58,7 +60,8 @@ class AttachmentsController extends BaseController
         $objAttachments = new \BusinessModel\Attachment();
 
         $objCases = new \BusinessModel\Cases();
-        $objElements = $objCases->getCaseInfo ($projectId, 1);
+        $objElements = $objCases->getCaseInfo ($projectId, $projectId);
+
         $this->view->attachmnets = $objCases->getAllUploadedDocumentsCriteria ($objElements, 1, $objUser);
 
         $this->view->writePermission = true;
@@ -113,7 +116,7 @@ class AttachmentsController extends BaseController
 
     public function cases_ShowDocumentAction ()
     {
-        $this->view->setRenderLevel(\Phalcon\Mvc\View::LEVEL_NO_RENDER);
+        $this->view->setRenderLevel (\Phalcon\Mvc\View::LEVEL_NO_RENDER);
 
         if ( empty ($_GET['a']) )
         {
@@ -135,7 +138,7 @@ class AttachmentsController extends BaseController
         $filename = $arrData['filename'];
         $mimeType = $arrData['mimeType'];
         $realPath = $arrData['realPath'];
-        
+
         header ('Pragma: public');
         header ('Expires: -1');
         header ('Cache-Control: public, must-revalidate, post-check=0, pre-check=0');
@@ -149,10 +152,11 @@ class AttachmentsController extends BaseController
         {
             ob_end_clean ();
             while (!feof ($fp) and ( connection_status () == 0)) {
-                print_r(fread ($fp, 8192));
+                print_r (fread ($fp, 8192));
                 flush ();
             }
             @fclose ($fp);
         }
     }
+
 }

@@ -566,33 +566,4 @@ class InboxController extends BaseController
             throw $e;
         }
     }
-
-    public function batchRoutingAction ()
-    {
-        $this->view->setRenderLevel (View::LEVEL_ACTION_VIEW);
-
-        $consolidatedCases = new ConsolidatedCases();
-        $this->view->arrTabs = $consolidatedCases->getListTabs ();
-        $this->view->arrCases = $consolidatedCases->getCases ();
-    }
-
-    public function saveBatchRoutingAction ()
-    {
-        $this->view->disable ();
-
-        if ( !isset ($_POST['batches']) || empty ($_POST['batches']) || !is_array ($_POST['batches']) )
-        {
-            return false;
-        }
-
-        $objCases = new \BusinessModel\Cases();
-        $objUser = (new \BusinessModel\UsersFactory())->getUser ($_SESSION['user']['usrid']);
-
-        foreach ($_POST['batches'] as $batch) {
-
-            $objElement = new Elements ($batch['projectId'], $batch['caseId']);
-            $objCases->updateStatus ($objElement, $objUser, "COMPLETE");
-        }
-    }
-
 }
