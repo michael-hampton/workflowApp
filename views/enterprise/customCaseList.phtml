@@ -66,12 +66,32 @@
             HTML += '<td>' + value.FLD_DESCRIPTION + '</td>';
 
             var checked = $.inArray (value.FLD_NAME, currentFields[value.ADD_TAB_UID]) != -1 ? 'checked="checked"' : '';
-            
+
             HTML += '<td><input class="checkbox" ' + checked + ' type="checkbox" tableid="' + value.ADD_TAB_UID + '" value="' + value.FLD_NAME + '"</td>';
             HTML += '<td><i style="font-size:20px;" class="fa fa-times-circle removeField"></i></td>';
             HTML += '</tr>';
 
             $ (".tableBody").append (HTML);
+        });
+
+        $ (".removeField").on ("click", function ()
+        {
+            
+            var $this = $(this);
+
+            swal ({
+                title: "Are you sure?",
+                text: "You will not be able to recover this field!",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "Yes, delete it!",
+                closeOnConfirm: false
+            }, function ()
+            {
+                $this.parent ().parent ().remove ();
+                swal ("Deleted!", "The field has been deleted.", "success");
+            });
         });
 
 
@@ -80,8 +100,6 @@
     $ (".Save").on ("click", function ()
     {
         var batches = [];
-
-        alert ("Here");
 
         $ (".checkbox:checked").each (function ()
         {
@@ -103,7 +121,7 @@
                 {
                     swal ({
                         title: "Success!",
-                        text: "All Cases were routed successfully!",
+                        text: "All Custom fields were saved successfully!",
                         type: "success"
                     });
 
@@ -111,7 +129,7 @@
                 else
                 {
                     swal ({
-                        title: "Cases could not be routed",
+                        title: "Fields could not be saved",
                         text: response,
                         type: "warning",
                         showCancelButton: false
