@@ -1,0 +1,128 @@
+<div class="wrapper wrapper-content  animated fadeInRight">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h2>Clients</h2>
+                    <p>
+                        All clients need to be verified before you can send email and set a project.
+                    </p>
+                    <div class="input-group">
+                        <select id="tableSelector" class="input form-control">
+                            <option value="">Select a PM Table</option>
+                            <?php foreach ($arrTables as $arrTable): ?>
+                                <option value="<?= $arrTable['PMT_UID'] ?>"><?= $arrTable['PMT_TAB_NAME'] ?></option>
+                            <?php endforeach ?>
+                        </select>
+
+                    </div>
+                    <div class="clients-list">
+
+                        <div class="tab-content">
+                            <div id="tab-1" class="tab-pane active">
+
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+
+                                        <thead>
+                                        <th>Field Name</th>
+                                        <th>Field Type</th>
+                                        <th>Label</th>
+                                        <th>Align</th>
+                                        </thead>
+
+                                        <tbody class="tableBody">
+
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button type="button" class="btn btn-w-m btn-primary Save">Save</button>
+
+<script>
+    var fields = <?= json_encode ($arrFields) ?>;
+    var currentFields = <?= json_encode ($selectedFields); ?>;
+
+    $ ("#tableSelector").on ("change", function ()
+    {
+        var tableId = $ (this).val ();
+
+        var selectedFields = fields[tableId];
+
+        $.each (selectedFields, function (index, value)
+        {
+            var HTML = '<tr>';
+            HTML += '<td>' + value.FLD_NAME + ' </td>';
+            HTML += '<td>' + value.FLD_TYPE + '</td>';
+            HTML += '<td>' + value.FLD_DESCRIPTION + '</td>';
+
+            var checked = $.inArray (value.FLD_NAME, currentFields[value.ADD_TAB_UID]) != -1 ? 'checked="checked"' : '';
+            
+            HTML += '<td><input class="checkbox" ' + checked + ' type="checkbox" tableid="' + value.ADD_TAB_UID + '" value="' + value.FLD_NAME + '"</td>';
+            HTML += '<td><i style="font-size:20px;" class="fa fa-times-circle removeField"></i></td>';
+            HTML += '</tr>';
+
+            $ (".tableBody").append (HTML);
+        });
+
+
+    });
+
+    $ (".Save").on ("click", function ()
+    {
+        var batches = [];
+
+        alert ("Here");
+
+        $ (".checkbox:checked").each (function ()
+        {
+            var $this = $ (this);
+            var data = {};
+
+            data.tableid = $this.attr ("tableid");
+            data.fieldid = $this.val ();
+            batches.push (data);
+        });
+
+        $.ajax ({
+            type: "POST",
+            url: "/FormBuilder/enterprise/saveCustomCaseList/",
+            data: {"fields": batches},
+            success: function (response)
+            {
+                if ($.trim (response) === "")
+                {
+                    swal ({
+                        title: "Success!",
+                        text: "All Cases were routed successfully!",
+                        type: "success"
+                    });
+
+                }
+                else
+                {
+                    swal ({
+                        title: "Cases could not be routed",
+                        text: response,
+                        type: "warning",
+                        showCancelButton: false
+                    });
+                }
+            },
+            error: function (request, status, error)
+            {
+                console.log ("critical errror occured");
+            }
+        });
+    });
+
+</script>

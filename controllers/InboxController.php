@@ -68,6 +68,50 @@ class InboxController extends BaseController
         $this->view->pagination = $this->getPagination ("jumpToPage", $arrNotifications['counts']);
         unset ($arrNotifications['counts']);
 
+        /*         * ********************* Start Custom Fields ****************************************************** */
+
+        $objMysql = new Mysql2();
+
+        $customFieldLists = $objMysql->_select ("custom_case_list");
+
+        $customFields = [];
+
+        if ( !empty ($customFieldLists) )
+        {
+            foreach ($customFieldLists as $customFieldList) {
+                $arrTable = (new \BusinessModel\Table())->getTable ($customFieldList['tableId']);
+
+                if ( $arrTable === false )
+                {
+                    return false;
+                }
+
+                $tableName = strtolower ("rpt_" . $arrTable['PMT_TAB_NAME']);
+
+                $customFields[$tableName][$customFieldList['field_name']] = $customFieldList['field_name'];
+            }
+
+            foreach ($arrNotifications as $key => $arrNotification) {
+                foreach ($customFields as $tableName => $arrColumns) {
+
+                    $columns = implode (",", array_keys ($arrColumns));
+
+                    $sql = "SELECT " . $columns . " FROM " . $tableName . " WHERE PRO_UID = ? AND APP_UID = ?";
+                    $arrData = $objMysql->_query ($sql, [$arrNotification['project']->getParentId (), $arrNotification['project']->getId ()]);
+
+                    if ( isset ($arrData[0]) && !empty ($arrData[0]) )
+                    {
+                        $arrNotifications[$key]['custom_fields'] = $arrData[0];
+                    }
+                }
+            }
+        }
+
+        $this->view->customFields = call_user_func_array ('array_merge', $customFields);
+
+
+        /*         * ********************* End Custom Fields ****************************************************** */
+
         $this->view->arrNotifications = $arrNotifications;
     }
 
@@ -566,4 +610,5 @@ class InboxController extends BaseController
             throw $e;
         }
     }
+
 }

@@ -235,7 +235,6 @@ class EnterpriseController extends \Phalcon\Mvc\Controller
             }
 
             echo '</ul>';
-            
         } catch (Exception $ex) {
             echo $ex->getMessage ();
         }
@@ -703,6 +702,54 @@ class EnterpriseController extends \Phalcon\Mvc\Controller
 
             $objElement = new Elements ($batch['projectId'], $batch['caseId']);
             $objCases->updateStatus ($objElement, $objUser, "COMPLETE");
+        }
+    }
+
+    public function customCaseListAction ()
+    {
+        $objAdditionalTables = new \BusinessModel\Table();
+        $arrTables = $objAdditionalTables->getTables ();
+
+        $arrFields = [];
+
+        foreach ($arrTables as $arrTable) {
+            $arrFields[$arrTable['PMT_UID']] = $arrTable['FIELDS'];
+        }
+
+        $objMysql = new Mysql2();
+
+        $selectedFields = [];
+        $results = $objMysql->_select ("custom_case_list");
+        
+        foreach ($results as $result) {
+            $selectedFields[$result['tableId']][] = $result['field_name'];
+        }
+
+        $this->view->selectedFields = $selectedFields;
+        $this->view->arrTables = $arrTables;
+        $this->view->arrFields = $arrFields;
+    }
+
+    public function saveCustomCaseListAction ()
+    {
+        $this->view->disable ();
+
+        if ( !isset ($_POST['fields']) || empty ($_POST['fields']) )
+        {
+            return false;
+        }
+
+        $objMysql = new Mysql2();
+
+        $objMysql->_delete ("custom_case_list");
+
+        foreach ($_POST['fields'] as $field) {
+            $result = $objMysql->_insert ("custom_case_list", ["tableId" => $field['tableid'], "field_name" => $field['fieldid']]);
+
+            if ( !$result )
+            {
+                return false;
+            }
         }
     }
 

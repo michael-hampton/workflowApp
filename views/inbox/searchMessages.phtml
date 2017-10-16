@@ -2,7 +2,8 @@
     <?= $pagination ?>
 </div>
 
-<?php if ( empty ($arrNotifications) )
+<?php
+if ( empty ($arrNotifications) )
     echo '<center><h2>No Notifications could be found.</h2><center>';
 ?>
 
@@ -17,6 +18,15 @@
             <th>Step</th>
             <th>Process</th>
             <th>Due Date</th>
+
+            <?php
+            if ( count ($customFields) > 0 )
+            {
+                foreach ($customFields as $customField) {
+                    echo '<th>' . $customField . '</th>';
+                }
+            }
+            ?>
 <!--            <th>Date Sent</th>-->
         </tr>
     </thead>
@@ -24,9 +34,8 @@
     <tbody>
 
         <?php
-        
         foreach ($arrNotifications as $key => $arrNotification):
-            
+
             if ( is_object ($arrNotifications[$key]['project']) ):
 
                 $class = $arrNotification['notifications']->getHasRead () == 0 ? 'unread' : 'read';
@@ -42,14 +51,24 @@
                     <td class=""><?= $arrNotification['project']->getCurrent_step () ?></td>
                     <td class=""><?= $arrNotification['project']->getWorkflowName () ?></td>
 
-        <!--                <td class="text-right mail-date"><?= $arrNotification['notifications']->getAppMsgSendDate () ?></td>-->
+                        <!--                <td class="text-right mail-date"><?= $arrNotification['notifications']->getAppMsgSendDate () ?></td>-->
                     <td class=""><?= $arrNotification['project']->getDueDate () ?></td>
+
+                    <?php
+                    if ( count ($customFields) > 0 )
+                    {
+                        foreach ($arrNotification['custom_fields'] as $customField) {
+                            echo '<td>' . $customField . '</td>';
+                        }
+                    }
+                    ?>
+
                 </tr>
 
-                <?php
-            endif;
-        endforeach;
-        ?>
+        <?php
+    endif;
+endforeach;
+?>
 
     </tbody>
 </table>
